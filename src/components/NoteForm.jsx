@@ -17,6 +17,19 @@ function normalizeKeyword(value) {
   return value.trim().replace(/\s+/g, ' ')
 }
 
+function normalizeDriveUrl(value) {
+  return value.trim().replace(/\s+/g, '')
+}
+
+function isGoogleDriveUrl(value) {
+  try {
+    const parsedUrl = new URL(normalizeDriveUrl(value))
+    return parsedUrl.protocol === 'https:' && parsedUrl.hostname === 'drive.google.com'
+  } catch {
+    return false
+  }
+}
+
 export default function NoteForm({ initialValues, onSubmit, submitLabel = 'Save Note', isSubmitting = false }) {
   const [formData, setFormData] = useState({ ...emptyForm, ...initialValues })
   const [keywordInput, setKeywordInput] = useState('')
@@ -90,7 +103,7 @@ export default function NoteForm({ initialValues, onSubmit, submitLabel = 'Save 
 
     if (!formData.drive_url.trim()) {
       nextErrors.drive_url = 'Google Drive URL is required.'
-    } else if (!formData.drive_url.trim().startsWith('https://drive.google.com')) {
+    } else if (!isGoogleDriveUrl(formData.drive_url)) {
       nextErrors.drive_url = 'Google Drive URL must start with https://drive.google.com'
     }
 
@@ -112,7 +125,7 @@ export default function NoteForm({ initialValues, onSubmit, submitLabel = 'Save 
       paper: formData.paper,
       keywords: formData.keywords,
       description: formData.description.trim(),
-      drive_url: formData.drive_url.trim(),
+      drive_url: normalizeDriveUrl(formData.drive_url),
       is_active: formData.is_active,
     })
   }

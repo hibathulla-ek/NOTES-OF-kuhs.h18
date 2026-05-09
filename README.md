@@ -18,6 +18,7 @@ Create a `.env.local` file in the project root:
 | `VITE_SUPABASE_ANON_KEY` | Supabase anon public key | `your_anon_key` |
 | `ADMIN_PASSWORD` | Server-only password used by the admin login API | `change_this_password` |
 | `SUPABASE_SERVICE_ROLE_KEY` | Server-only Supabase key used by Vercel API functions for admin reads and writes | `your_service_role_key` |
+| `VITE_ADMIN_API_BASE_URL` | Optional local-only API base URL when using Vite without Vercel functions | `https://your-app.vercel.app` |
 
 ## Supabase Setup
 

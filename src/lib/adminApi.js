@@ -8,9 +8,13 @@ async function readApiResponse(response) {
   return payload
 }
 
+const localAdminApiBaseUrl = import.meta.env.VITE_ADMIN_API_BASE_URL ?? ''
+
 export async function adminRequest(path, { method = 'GET', body, password } = {}) {
+  const url = localAdminApiBaseUrl ? `${localAdminApiBaseUrl}${path}` : path
+
   return readApiResponse(
-    await fetch(path, {
+    await fetch(url, {
       method,
       headers: {
         'Content-Type': 'application/json',
