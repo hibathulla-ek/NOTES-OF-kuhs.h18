@@ -1,4 +1,5 @@
 import { createContext, useContext, useMemo, useState } from 'react'
+import { adminRequest } from '../lib/adminApi'
 
 const AdminAuthContext = createContext(null)
 
@@ -7,18 +8,14 @@ export function AdminAuthProvider({ children }) {
   const [adminPassword, setAdminPassword] = useState('')
 
   async function login(password) {
-    const response = await fetch('/api/admin/login', {
+    await adminRequest('/api/admin/login', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-admin-password': password,
-      },
+      password,
     })
-    const isValid = response.ok
 
-    setIsAuthenticated(isValid)
-    setAdminPassword(isValid ? password : '')
-    return isValid
+    setIsAuthenticated(true)
+    setAdminPassword(password)
+    return true
   }
 
   function logout() {

@@ -1,6 +1,10 @@
-import { getSupabaseAdmin, methodNotAllowed, requireAdmin, sendError } from '../_admin.js'
+import { getSupabaseAdmin, handleCors, methodNotAllowed, requireAdmin, sendError } from '../_admin.js'
 
 export default async function handler(request, response) {
+  if (handleCors(request, response)) {
+    return
+  }
+
   if (!requireAdmin(request, response)) {
     return
   }

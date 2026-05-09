@@ -1,5 +1,34 @@
 import { createClient } from '@supabase/supabase-js'
 
+const allowedOrigins = new Set([
+  'http://127.0.0.1:5173',
+  'http://localhost:5173',
+  'https://notes-of-kuhs.vercel.app',
+])
+
+export function applyCors(request, response) {
+  const origin = request.headers.origin
+
+  if (allowedOrigins.has(origin)) {
+    response.setHeader('Access-Control-Allow-Origin', origin)
+  }
+
+  response.setHeader('Vary', 'Origin')
+  response.setHeader('Access-Control-Allow-Methods', 'GET,POST,PATCH,DELETE,OPTIONS')
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type,x-admin-password')
+}
+
+export function handleCors(request, response) {
+  applyCors(request, response)
+
+  if (request.method === 'OPTIONS') {
+    response.status(204).end()
+    return true
+  }
+
+  return false
+}
+
 function sendJson(response, status, payload) {
   response.status(status).json(payload)
 }
