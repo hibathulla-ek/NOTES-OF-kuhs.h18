@@ -145,7 +145,7 @@ export default function AdminDashboard() {
 
     try {
       const nextIsActive = !note.is_active
-      await adminRequest(`/api/admin/notes/${note.id}`, {
+      await adminRequest(`/api/admin/note?id=${encodeURIComponent(note.id)}`, {
         method: 'PATCH',
         password: adminPassword,
         body: { is_active: nextIsActive },
@@ -170,7 +170,7 @@ export default function AdminDashboard() {
     setBusyNoteId(note.id)
 
     try {
-      await adminRequest(`/api/admin/notes/${note.id}`, {
+      await adminRequest(`/api/admin/note?id=${encodeURIComponent(note.id)}`, {
         method: 'DELETE',
         password: adminPassword,
       })

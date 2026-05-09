@@ -27,7 +27,7 @@ export default function EditNote() {
       setError('')
 
       try {
-        const data = await adminRequest(`/api/admin/notes/${id}`, { password: adminPassword })
+        const data = await adminRequest(`/api/admin/note?id=${encodeURIComponent(id)}`, { password: adminPassword })
 
         if (isCurrent) {
           setNote(data.note)
@@ -54,7 +54,7 @@ export default function EditNote() {
     setIsSubmitting(true)
 
     try {
-      await adminRequest(`/api/admin/notes/${id}`, {
+      await adminRequest(`/api/admin/note?id=${encodeURIComponent(id)}`, {
         method: 'PATCH',
         password: adminPassword,
         body: noteData,
