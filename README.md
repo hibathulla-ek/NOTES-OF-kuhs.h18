@@ -1,3 +1,4 @@
+# Rizvan got acccess
 # KUHS BSc MLT Notes Portal
 
 KUHS BSc MLT Notes Portal is a React, Vite, Tailwind CSS, and Supabase app for publishing and searching BSc MLT study notes by topic, subject, year, and paper. It includes a public search experience plus a lightweight admin panel for adding, editing, hiding, and deleting note records that link to Google Drive files.
