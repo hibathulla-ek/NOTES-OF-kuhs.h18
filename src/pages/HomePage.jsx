@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { SUBJECTS, PAPERS, YEARS, SUBJECT_COLORS } from '../lib/constants'
 import { supabase, supabaseConfigError } from '../lib/supabase'
+import toast from 'react-hot-toast'
 
 const initialSubjectCounts = SUBJECTS.reduce((counts, subject) => {
   counts[subject] = 0
@@ -33,6 +34,11 @@ export default function HomePage() {
   const [subjectCounts, setSubjectCounts] = useState(initialSubjectCounts)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+
+  // Request form state
+  const [requestTopic, setRequestTopic] = useState('')
+  const [isSubmittingRequest, setIsSubmittingRequest] = useState(false)
+  const [requestSuccess, setRequestSuccess] = useState(false)
 
   useEffect(() => {
     document.title = 'KUHS BSc MLT Notes Portal — Find Your Notes Instantly'
@@ -108,6 +114,28 @@ export default function HomePage() {
 
   function handleSubjectClick(subject) {
     navigate(`/search?subject=${encodeURIComponent(subject)}`)
+  }
+
+  async function handleRequestSubmit(event) {
+    event.preventDefault()
+    const topic = requestTopic.trim()
+    if (topic.length < 3) return
+
+    setIsSubmittingRequest(true)
+    try {
+      const { error } = await supabase
+        .from('note_requests')
+        .insert([{ topic }])
+      if (error) throw error
+      
+      setRequestSuccess(true)
+      setRequestTopic('')
+      setTimeout(() => setRequestSuccess(false), 5000)
+    } catch (err) {
+      toast.error('Failed to send request. Please try again.')
+    } finally {
+      setIsSubmittingRequest(false)
+    }
   }
 
   return (
@@ -187,6 +215,40 @@ export default function HomePage() {
                     </button>
                   )
                 })}
+          </div>
+        </section>
+
+        <section className="bg-slate-100 px-4 py-12 text-center sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-xl">
+            <h2 className="text-2xl font-bold text-brand-blue">Can't find what you need?</h2>
+            <p className="mt-2 text-sm text-slate-600">Request a note — we'll upload it soon.</p>
+            
+            {requestSuccess ? (
+              <div className="mt-6 rounded-md bg-green-50 p-4 text-sm font-semibold text-green-800 border border-green-200">
+                Request sent! We'll add it soon.
+              </div>
+            ) : (
+              <form onSubmit={handleRequestSubmit} className="mt-6 flex flex-col sm:flex-row gap-3">
+                <input
+                  type="text"
+                  value={requestTopic}
+                  onChange={(e) => setRequestTopic(e.target.value)}
+                  maxLength={80}
+                  placeholder="e.g. Iron deficiency anaemia"
+                  className="w-full rounded-md border border-slate-300 px-4 py-2 text-sm focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
+                  required
+                  minLength={3}
+                  disabled={isSubmittingRequest}
+                />
+                <button
+                  type="submit"
+                  disabled={isSubmittingRequest || requestTopic.trim().length < 3}
+                  className="whitespace-nowrap rounded-md bg-brand-blue px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmittingRequest ? 'Sending...' : 'Send Request'}
+                </button>
+              </form>
+            )}
           </div>
         </section>
       </main>

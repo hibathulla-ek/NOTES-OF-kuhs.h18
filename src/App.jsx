@@ -1,5 +1,7 @@
-import { Link, Route, Routes } from 'react-router-dom'
+import { Link, Route, Routes, useLocation } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
+import { useEffect } from 'react'
+import { supabase } from './lib/supabase'
 import AdminLayout from './components/AdminLayout'
 import Navbar from './components/Navbar'
 import AddNote from './pages/AddNote'
@@ -8,6 +10,16 @@ import AdminLogin from './pages/AdminLogin'
 import EditNote from './pages/EditNote'
 import HomePage from './pages/HomePage'
 import SearchPage from './pages/SearchPage'
+import QuestionBankPage from './pages/QuestionBankPage'
+import MCQPage from './pages/MCQPage'
+import NoteRequests from './pages/NoteRequests'
+import AdminQuestions from './pages/AdminQuestions'
+import AddQuestion from './pages/AddQuestion'
+import EditQuestion from './pages/EditQuestion'
+import AdminMCQ from './pages/AdminMCQ'
+import AddMCQ from './pages/AddMCQ'
+import EditMCQ from './pages/EditMCQ'
+import MCQSettings from './pages/MCQSettings'
 
 function PlaceholderPage({ children }) {
   return (
@@ -36,17 +48,42 @@ function NotFoundPage() {
 }
 
 export default function App() {
+  const location = useLocation()
+
+  useEffect(() => {
+    async function trackView() {
+      if (supabase) {
+        try {
+          await supabase.from('site_views').insert([{ page: location.pathname }])
+        } catch (error) {
+          // Silently fail
+        }
+      }
+    }
+    trackView()
+  }, [location.pathname])
+
   return (
     <>
       <Navbar />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/search" element={<SearchPage />} />
+        <Route path="/questions" element={<QuestionBankPage />} />
+        <Route path="/mcq" element={<MCQPage />} />
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/admin" element={<AdminLayout />}>
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="new" element={<AddNote />} />
           <Route path="edit/:id" element={<EditNote />} />
+          <Route path="requests" element={<NoteRequests />} />
+          <Route path="questions" element={<AdminQuestions />} />
+          <Route path="questions/new" element={<AddQuestion />} />
+          <Route path="questions/edit/:id" element={<EditQuestion />} />
+          <Route path="mcq" element={<AdminMCQ />} />
+          <Route path="mcq/new" element={<AddMCQ />} />
+          <Route path="mcq/edit/:id" element={<EditMCQ />} />
+          <Route path="mcq/settings" element={<MCQSettings />} />
         </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
