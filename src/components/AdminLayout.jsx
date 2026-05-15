@@ -105,8 +105,9 @@ function AdminNav({ onNavigate }) {
           <span className="block text-xs font-bold uppercase tracking-wider text-slate-500">Total Views</span>
           <span className="mt-1 block text-3xl font-black text-brand-blue">{stats.views}</span>
         </div>
+      </div>
 
-      <div className="border-t border-slate-200 p-3">
+      <div className="border-t border-slate-200 p-3 shrink-0">
         <button
           type="button"
           onClick={() => {
