@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { AdminAuthProvider } from './context/AdminAuth.jsx'
+import { DownloadLimitProvider } from './context/DownloadLimit.jsx'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
@@ -11,7 +12,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <BrowserRouter>
       <ErrorBoundary>
         <AdminAuthProvider>
-          <App />
+          <DownloadLimitProvider>
+            <App />
+          </DownloadLimitProvider>
         </AdminAuthProvider>
       </ErrorBoundary>
     </BrowserRouter>

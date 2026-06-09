@@ -7,14 +7,22 @@ export function AdminAuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [adminPassword, setAdminPassword] = useState('')
 
-  async function login(password) {
+  async function sendOtp(email) {
     await adminRequest('/api/admin/login', {
       method: 'POST',
-      password,
+      body: { action: 'send_otp', email },
+    })
+    return true
+  }
+
+  async function login(email, otp) {
+    const data = await adminRequest('/api/admin/login', {
+      method: 'POST',
+      body: { action: 'verify_otp', email, otp },
     })
 
     setIsAuthenticated(true)
-    setAdminPassword(password)
+    setAdminPassword(data.password)
     return true
   }
 
@@ -27,6 +35,7 @@ export function AdminAuthProvider({ children }) {
     () => ({
       isAuthenticated,
       adminPassword,
+      sendOtp,
       login,
       logout,
     }),

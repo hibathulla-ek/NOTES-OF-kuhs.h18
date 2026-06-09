@@ -1,5 +1,6 @@
 import { ExternalLink } from 'lucide-react'
 import { SUBJECT_COLORS } from '../lib/constants'
+import { useDownloadLimit } from '../context/DownloadLimit'
 
 export default function QuestionCard({ question }) {
   const colors = SUBJECT_COLORS[question.subject] ?? {
@@ -7,6 +8,7 @@ export default function QuestionCard({ question }) {
     text: 'text-slate-800',
   }
   const hasDriveUrl = Boolean(question.drive_url)
+  const { isLimitReached, downloadFile } = useDownloadLimit()
 
   return (
     <article className="flex min-h-64 flex-col rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
@@ -33,15 +35,15 @@ export default function QuestionCard({ question }) {
       </div>
 
       {hasDriveUrl ? (
-        <a
-          href={question.drive_url}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-5 inline-flex items-center justify-center gap-2 rounded-md bg-brand-blue px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2"
+        <button
+          type="button"
+          onClick={() => downloadFile(question.id, 'question')}
+          disabled={isLimitReached}
+          className="mt-5 inline-flex items-center justify-center gap-2 rounded-md bg-brand-blue px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-300"
         >
           Open Note
           <ExternalLink className="h-4 w-4" aria-hidden="true" />
-        </a>
+        </button>
       ) : (
         <button
           type="button"

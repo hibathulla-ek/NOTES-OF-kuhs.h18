@@ -151,3 +151,27 @@ on public.mcqs
 for select
 using (is_active = true);
 
+-- Downloads log table for 15-downloads rolling limit
+create table if not exists public.downloads (
+  id uuid primary key default gen_random_uuid(),
+  ip_address text not null,
+  downloaded_at timestamptz default now() not null,
+  file_id uuid not null,
+  file_type text not null
+);
+
+alter table public.downloads enable row level security;
+create index if not exists downloads_ip_time_idx on public.downloads (ip_address, downloaded_at desc);
+
+-- Admin login attempts table for brute-force protection
+create table if not exists public.admin_login_attempts (
+  id uuid primary key default gen_random_uuid(),
+  email text not null,
+  ip_address text not null,
+  attempted_at timestamptz default now() not null,
+  is_successful boolean default false not null
+);
+
+alter table public.admin_login_attempts enable row level security;
+create index if not exists admin_login_attempts_email_time_idx on public.admin_login_attempts (email, attempted_at desc);
+create index if not exists admin_login_attempts_ip_time_idx on public.admin_login_attempts (ip_address, attempted_at desc);

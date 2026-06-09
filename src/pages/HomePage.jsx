@@ -249,6 +249,7 @@ export default function HomePage() {
                 </button>
               </form>
             )}
+            <p className="mt-3 text-xs text-slate-500 font-medium">Your requested note will be added within 12 hours.</p>
           </div>
         </section>
       </main>
