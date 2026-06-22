@@ -9,12 +9,12 @@ export default async function handler(request, response) {
     return
   }
 
-  const { action, email, otp } = request.body
+  const { email, password } = request.body
   const ip = request.headers['x-forwarded-for'] || request.headers['x-real-ip'] || request.socket?.remoteAddress || 'unknown'
   const clientIp = typeof ip === 'string' ? ip.split(',')[0].trim() : 'unknown'
 
-  if (!email) {
-    response.status(400).json({ error: 'Email is required.' })
+  if (!email || !password) {
+    response.status(400).json({ error: 'Email and password are required.' })
     return
   }
 
@@ -41,72 +41,24 @@ export default async function handler(request, response) {
       return
     }
 
-    // 2. Handle send_otp action
-    if (action === 'send_otp') {
-      if (normalizedEmail !== expectedEmail) {
-        // Log a failed attempt to prevent email discovery brute forcing and to trigger cooldown for random scans
-        await supabase
-          .from('admin_login_attempts')
-          .insert([{ email: normalizedEmail, ip_address: clientIp, is_successful: false }])
-
-        response.status(401).json({ error: 'Unauthorized email address.' })
-        return
-      }
-
-      // Trigger Supabase OTP send
-      const { error: otpError } = await supabase.auth.signInWithOtp({
-        email: normalizedEmail,
-        options: {
-          shouldCreateUser: false
-        }
-      })
-
-      if (otpError) throw otpError
-
-      response.status(200).json({ ok: true })
-      return
-    }
-
-    // 3. Handle verify_otp action
-    if (action === 'verify_otp') {
-      if (!otp) {
-        response.status(400).json({ error: 'Verification code is required.' })
-        return
-      }
-
-      if (normalizedEmail !== expectedEmail) {
-        response.status(401).json({ error: 'Unauthorized email address.' })
-        return
-      }
-
-      // Verify OTP with Supabase
-      const { data, error: verifyError } = await supabase.auth.verifyOtp({
-        email: normalizedEmail,
-        token: otp,
-        type: 'email'
-      })
-
-      if (verifyError || !data || !data.session) {
-        // Log failed attempt
-        await supabase
-          .from('admin_login_attempts')
-          .insert([{ email: normalizedEmail, ip_address: clientIp, is_successful: false }])
-
-        response.status(401).json({ error: 'Incorrect verification code.' })
-        return
-      }
-
-      // Log successful attempt
+    // 2. Validate credentials against the single configured admin account
+    const expectedPassword = process.env.ADMIN_PASSWORD
+    if (normalizedEmail !== expectedEmail || !expectedPassword || password !== expectedPassword) {
       await supabase
         .from('admin_login_attempts')
-        .insert([{ email: normalizedEmail, ip_address: clientIp, is_successful: true }])
+        .insert([{ email: normalizedEmail, ip_address: clientIp, is_successful: false }])
 
-      // Return ok and ADMIN_PASSWORD to match the existing requireAdmin checks on subsequent admin calls
-      response.status(200).json({ ok: true, password: process.env.ADMIN_PASSWORD })
+      response.status(401).json({ error: 'Incorrect email or password.' })
       return
     }
 
-    response.status(400).json({ error: 'Invalid action.' })
+    // Log successful attempt
+    await supabase
+      .from('admin_login_attempts')
+      .insert([{ email: normalizedEmail, ip_address: clientIp, is_successful: true }])
+
+    // Return ADMIN_PASSWORD so it can be reused in the x-admin-password header on subsequent admin calls
+    response.status(200).json({ ok: true, password: expectedPassword })
   } catch (error) {
     sendError(response, error, 'Login failed.')
   }
