@@ -253,10 +253,6 @@ export default function HomePage() {
           </div>
         </section>
       </main>
-
-      <footer className="border-t border-slate-200 bg-white px-4 py-6 text-center text-sm text-slate-600 sm:px-6 lg:px-8">
-        KUHS BSc MLT Notes Portal · For educational use only · 2025
-      </footer>
     </div>
   )
 }

@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { supabase } from './lib/supabase'
 import AdminLayout from './components/AdminLayout'
 import Navbar from './components/Navbar'
+import Footer from './components/Footer'
 import AddNote from './pages/AddNote'
 import AdminDashboard from './pages/AdminDashboard'
 import AdminLogin from './pages/AdminLogin'
@@ -20,6 +21,8 @@ import AdminMCQ from './pages/AdminMCQ'
 import AddMCQ from './pages/AddMCQ'
 import EditMCQ from './pages/EditMCQ'
 import MCQSettings from './pages/MCQSettings'
+import TermsPage from './pages/TermsPage'
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
 
 function PlaceholderPage({ children }) {
   return (
@@ -63,6 +66,8 @@ export default function App() {
     trackView()
   }, [location.pathname])
 
+  const isAdminRoute = location.pathname.startsWith('/admin')
+
   return (
     <>
       <Navbar />
@@ -71,6 +76,8 @@ export default function App() {
         <Route path="/search" element={<SearchPage />} />
         <Route path="/questions" element={<QuestionBankPage />} />
         <Route path="/mcq" element={<MCQPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/privacy" element={<PrivacyPolicyPage />} />
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/admin" element={<AdminLayout />}>
           <Route path="dashboard" element={<AdminDashboard />} />
@@ -87,6 +94,7 @@ export default function App() {
         </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
+      {isAdminRoute ? null : <Footer />}
       <Toaster position="top-right" />
     </>
   )

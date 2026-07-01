@@ -30,13 +30,22 @@ function isGoogleDriveUrl(value) {
   }
 }
 
+function buildFormData(initialValues) {
+  return {
+    ...emptyForm,
+    ...initialValues,
+    keywords: initialValues?.keywords ?? [],
+    description: initialValues?.description ?? '',
+  }
+}
+
 export default function NoteForm({ initialValues, onSubmit, submitLabel = 'Save Note', isSubmitting = false }) {
-  const [formData, setFormData] = useState({ ...emptyForm, ...initialValues })
+  const [formData, setFormData] = useState(() => buildFormData(initialValues))
   const [keywordInput, setKeywordInput] = useState('')
   const [errors, setErrors] = useState({})
 
   useEffect(() => {
-    setFormData({ ...emptyForm, ...initialValues, keywords: initialValues?.keywords ?? [] })
+    setFormData(buildFormData(initialValues))
   }, [initialValues])
 
   function updateField(name, value) {

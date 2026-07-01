@@ -42,10 +42,20 @@ export default async function handler(request, response) {
     }
 
     if (request.method === 'DELETE') {
-      const { error } = await supabase.from('notes').delete().eq('id', id)
+      const isPermanent = request.query.permanent === 'true'
 
-      if (error) {
-        throw error
+      if (isPermanent) {
+        const { error } = await supabase.from('notes').delete().eq('id', id)
+
+        if (error) {
+          throw error
+        }
+      } else {
+        const { error } = await supabase.from('notes').update({ deleted_at: new Date().toISOString() }).eq('id', id)
+
+        if (error) {
+          throw error
+        }
       }
 
       response.status(200).json({ ok: true })

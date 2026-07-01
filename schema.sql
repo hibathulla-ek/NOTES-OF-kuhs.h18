@@ -175,3 +175,13 @@ create table if not exists public.admin_login_attempts (
 alter table public.admin_login_attempts enable row level security;
 create index if not exists admin_login_attempts_email_time_idx on public.admin_login_attempts (email, attempted_at desc);
 create index if not exists admin_login_attempts_ip_time_idx on public.admin_login_attempts (ip_address, attempted_at desc);
+
+-- Soft delete (Trash / Recycle Bin) support for notes
+alter table public.notes add column if not exists deleted_at timestamptz;
+create index if not exists notes_deleted_at_idx on public.notes (deleted_at);
+
+drop policy if exists "Public can view active notes" on public.notes;
+create policy "Public can view active notes"
+on public.notes
+for select
+using (is_active = true and deleted_at is null);

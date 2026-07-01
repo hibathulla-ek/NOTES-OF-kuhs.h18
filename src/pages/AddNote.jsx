@@ -14,7 +14,34 @@ export default function AddNote() {
     document.title = 'Admin — KUHS MLT Notes'
   }, [])
 
+  async function isDuplicateNote(noteData) {
+    try {
+      const data = await adminRequest('/api/admin/notes', { password: adminPassword })
+      const existingNotes = data.notes ?? []
+      const normalizedUrl = noteData.drive_url.trim().toLowerCase()
+      const normalizedTitle = noteData.title.trim().toLowerCase()
+
+      return existingNotes.some(
+        (existingNote) =>
+          existingNote.drive_url?.trim().toLowerCase() === normalizedUrl ||
+          existingNote.title?.trim().toLowerCase() === normalizedTitle,
+      )
+    } catch {
+      return false
+    }
+  }
+
   async function handleSubmit(noteData) {
+    if (await isDuplicateNote(noteData)) {
+      const confirmed = window.confirm(
+        'A note with a matching title or Google Drive link already exists. Add it anyway?',
+      )
+
+      if (!confirmed) {
+        return
+      }
+    }
+
     setIsSubmitting(true)
 
     try {
