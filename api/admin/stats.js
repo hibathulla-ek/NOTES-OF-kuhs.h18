@@ -8,12 +8,14 @@ export default async function handler(request, response) {
     const supabase = getSupabaseAdmin()
 
     if (request.method === 'GET') {
-      const [{ count: viewsCount }, { count: pendingCount }] = await Promise.all([
-        supabase.from('site_views').select('*', { count: 'exact', head: true }),
+      const [{ data: viewRows }, { count: pendingCount }] = await Promise.all([
+        supabase.from('site_views').select('ip_address').not('ip_address', 'is', null),
         supabase.from('note_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending')
       ])
 
-      response.status(200).json({ views: viewsCount ?? 0, pendingRequests: pendingCount ?? 0 })
+      const uniqueViews = new Set((viewRows ?? []).map((row) => row.ip_address)).size
+
+      response.status(200).json({ views: uniqueViews, pendingRequests: pendingCount ?? 0 })
       return
     }
 

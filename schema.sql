@@ -78,6 +78,9 @@ create table if not exists public.site_views (
   page text
 );
 
+alter table public.site_views add column if not exists ip_address text;
+create index if not exists site_views_ip_idx on public.site_views (ip_address);
+
 alter table public.site_views enable row level security;
 
 drop policy if exists "Public can insert views" on public.site_views;

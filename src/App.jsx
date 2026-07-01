@@ -52,21 +52,24 @@ function NotFoundPage() {
 
 export default function App() {
   const location = useLocation()
+  const isAdminRoute = location.pathname.startsWith('/admin')
 
   useEffect(() => {
     async function trackView() {
-      if (supabase) {
-        try {
-          await supabase.from('site_views').insert([{ page: location.pathname }])
-        } catch (error) {
-          // Silently fail
-        }
+      if (!supabase || isAdminRoute) {
+        return
+      }
+
+      try {
+        const ipResponse = await fetch('https://api.ipify.org?format=json')
+        const { ip } = await ipResponse.json()
+        await supabase.from('site_views').insert([{ page: location.pathname, ip_address: ip }])
+      } catch (error) {
+        // Silently fail
       }
     }
     trackView()
-  }, [location.pathname])
-
-  const isAdminRoute = location.pathname.startsWith('/admin')
+  }, [location.pathname, isAdminRoute])
 
   return (
     <>
