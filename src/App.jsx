@@ -23,6 +23,8 @@ import EditMCQ from './pages/EditMCQ'
 import MCQSettings from './pages/MCQSettings'
 import TermsPage from './pages/TermsPage'
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
+import AboutPage from './pages/AboutPage'
+import ContactPage from './pages/ContactPage'
 
 function PlaceholderPage({ children }) {
   return (
@@ -81,6 +83,8 @@ export default function App() {
         <Route path="/mcq" element={<MCQPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPolicyPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/contact" element={<ContactPage />} />
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/admin" element={<AdminLayout />}>
           <Route path="dashboard" element={<AdminDashboard />} />

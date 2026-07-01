@@ -6,6 +6,8 @@ const quickLinks = [
   { to: '/', label: 'Home' },
   { to: '/search', label: 'Search Notes' },
   { to: '/questions', label: 'Question Bank' },
+  { to: '/about', label: 'About Us' },
+  { to: '/contact', label: 'Contact Us' },
 ]
 
 const legalLinks = [
