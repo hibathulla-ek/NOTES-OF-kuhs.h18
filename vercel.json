@@ -1,8 +1,7 @@
 {
   "rewrites": [
     {
-      "source": "/(.*)",
-      "has": [{ "type": "header", "key": "sec-fetch-mode", "value": "navigate" }],
+      "source": "/((?!api/|assets/).*)",
       "destination": "/index.html"
     }
   ],
