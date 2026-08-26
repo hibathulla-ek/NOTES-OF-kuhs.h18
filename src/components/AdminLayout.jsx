@@ -1,8 +1,9 @@
-import { BookOpen, Home, LayoutDashboard, LogOut, Menu, Plus, X, MessageSquare, Database, HelpCircle, Settings, Eye } from 'lucide-react'
+import { BookOpen, Home, LayoutDashboard, LogOut, Menu, Plus, X, MessageSquare, Database, HelpCircle, Settings, Eye, Activity } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { NavLink, Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAdminAuth } from '../context/AdminAuth'
 import { adminRequest } from '../lib/adminApi'
+import { supabase } from '../lib/supabase'
 
 const notesLinks = [
   { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -26,17 +27,51 @@ function AdminNav({ onNavigate }) {
   const [stats, setStats] = useState({ views: 0, pendingRequests: 0 })
 
   useEffect(() => {
+    let isCurrent = true
+
     async function loadStats() {
       try {
         const data = await adminRequest('/api/admin/stats', { password: adminPassword })
-        if (data) {
+        if (data && isCurrent) {
           setStats({ views: data.views || 0, pendingRequests: data.pendingRequests || 0 })
         }
       } catch (err) {
         // fail silently
       }
     }
+
     loadStats()
+
+    let channel = null
+    if (supabase) {
+      channel = supabase
+        .channel('admin-stats-realtime')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'site_views' },
+          () => {
+            loadStats()
+          }
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'note_requests' },
+          () => {
+            loadStats()
+          }
+        )
+        .subscribe()
+    }
+
+    const interval = setInterval(loadStats, 15000)
+
+    return () => {
+      isCurrent = false
+      if (channel && supabase) {
+        supabase.removeChannel(channel)
+      }
+      clearInterval(interval)
+    }
   }, [location.pathname, adminPassword])
 
   function renderLinks(links) {
@@ -102,8 +137,14 @@ function AdminNav({ onNavigate }) {
 
       <div className="border-t border-slate-200 p-4 shrink-0">
         <div className="mb-4 rounded-lg bg-slate-50 p-4 text-center border border-slate-100">
-          <span className="block text-xs font-bold uppercase tracking-wider text-slate-500">Total Views</span>
-          <span className="mt-1 block text-3xl font-black text-brand-blue">{stats.views}</span>
+          <div className="flex items-center justify-center gap-1.5 mb-1">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="block text-xs font-bold uppercase tracking-wider text-slate-500">Total Views</span>
+          </div>
+          <span className="block text-3xl font-black text-brand-blue">{typeof stats.views === 'number' ? stats.views.toLocaleString('en-IN') : stats.views}</span>
         </div>
       </div>
 

@@ -1,4 +1,4 @@
-import { Edit, Loader2, Plus, RotateCcw, Trash2, XCircle } from 'lucide-react'
+import { Edit, Loader2, Plus, RotateCcw, Search, Share2, Trash2, X, XCircle } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
 import { Link } from 'react-router-dom'
@@ -56,7 +56,7 @@ function SubjectBadge({ subject }) {
   return <span className={`inline-flex rounded px-2 py-1 text-xs font-semibold ${colors.bg} ${colors.text}`}>{subject}</span>
 }
 
-function NoteActions({ note, isBusy, isTrash, onToggle, onDelete, onRestore, onPermanentDelete, stacked = false }) {
+function NoteActions({ note, isBusy, isTrash, onToggle, onDelete, onRestore, onPermanentDelete, onShare, stacked = false }) {
   if (isTrash) {
     return (
       <div className={stacked ? 'grid gap-2' : 'flex flex-wrap gap-2'}>
@@ -93,6 +93,15 @@ function NoteActions({ note, isBusy, isTrash, onToggle, onDelete, onRestore, onP
       </Link>
       <button
         type="button"
+        onClick={() => onShare(note)}
+        className="inline-flex items-center justify-center gap-1 rounded-md bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-brand-light hover:text-brand-blue focus:outline-none focus:ring-2 focus:ring-brand-accent"
+        title="Copy share link"
+      >
+        <Share2 className="h-3.5 w-3.5" aria-hidden="true" />
+        Share
+      </button>
+      <button
+        type="button"
         onClick={() => onToggle(note)}
         disabled={isBusy}
         className="rounded-md bg-brand-light px-3 py-2 text-xs font-bold text-brand-blue hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-brand-accent disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
@@ -121,6 +130,7 @@ export default function AdminDashboard() {
   const [sort, setSort] = useState({ key: 'created_at', direction: 'desc' })
   const [busyNoteId, setBusyNoteId] = useState('')
   const [activeTab, setActiveTab] = useState('all')
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     document.title = 'Admin — KUHS MLT Notes'
@@ -153,20 +163,34 @@ export default function AdminDashboard() {
   const isTrashTab = activeTab === 'trash'
 
   const visibleNotes = useMemo(() => {
+    let list = notes
     if (activeTab === 'trash') {
-      return trashedNotes
+      list = trashedNotes
+    } else if (activeTab === 'active') {
+      list = notes.filter((note) => note.is_active)
+    } else if (activeTab === 'hidden') {
+      list = notes.filter((note) => !note.is_active)
     }
 
-    if (activeTab === 'active') {
-      return notes.filter((note) => note.is_active)
+    const query = searchQuery.trim().toLowerCase()
+    if (!query) {
+      return list
     }
 
-    if (activeTab === 'hidden') {
-      return notes.filter((note) => !note.is_active)
-    }
+    return list.filter((note) => {
+      const title = (note.title || '').toLowerCase()
+      const subject = (note.subject || '').toLowerCase()
+      const year = (note.year || '').toLowerCase()
+      const paper = (note.paper || '').toLowerCase()
 
-    return notes
-  }, [activeTab, notes, trashedNotes])
+      return (
+        title.includes(query) ||
+        subject.includes(query) ||
+        year.includes(query) ||
+        paper.includes(query)
+      )
+    })
+  }, [activeTab, notes, trashedNotes, searchQuery])
 
   const sortedNotes = useMemo(() => {
     return [...visibleNotes].sort((first, second) => {
@@ -202,6 +226,26 @@ export default function AdminDashboard() {
       key,
       direction: currentSort.key === key && currentSort.direction === 'asc' ? 'desc' : 'asc',
     }))
+  }
+
+  async function handleShare(note) {
+    const shareUrl = `${window.location.origin}/notes/${note.id}`
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl)
+      } else {
+        const textArea = document.createElement('textarea')
+        textArea.value = shareUrl
+        textArea.className = 'fixed opacity-0 pointer-events-none'
+        document.body.appendChild(textArea)
+        textArea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textArea)
+      }
+      toast.success('Link copied to clipboard')
+    } catch {
+      toast.error('Unable to copy link to clipboard')
+    }
   }
 
   async function handleToggle(note) {
@@ -310,29 +354,69 @@ export default function AdminDashboard() {
         </Link>
       </div>
 
-      <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-3">
-        {TABS.map((tab) => (
-          <button
-            key={tab.key}
-            type="button"
-            onClick={() => setActiveTab(tab.key)}
-            className={`inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-bold transition focus:outline-none focus:ring-2 focus:ring-brand-accent ${
-              activeTab === tab.key
-                ? 'bg-brand-blue text-white'
-                : 'bg-slate-100 text-slate-700 hover:bg-brand-light hover:text-brand-blue'
-            }`}
-          >
-            {tab.label}
-            <span
-              className={`rounded-full px-2 py-0.5 text-xs ${
-                activeTab === tab.key ? 'bg-white/20 text-white' : 'bg-white text-slate-500'
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between border-b border-slate-200 pb-3">
+        <div className="flex flex-wrap gap-2">
+          {TABS.map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => setActiveTab(tab.key)}
+              className={`inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-bold transition focus:outline-none focus:ring-2 focus:ring-brand-accent ${
+                activeTab === tab.key
+                  ? 'bg-brand-blue text-white'
+                  : 'bg-slate-100 text-slate-700 hover:bg-brand-light hover:text-brand-blue'
               }`}
             >
-              {tabCounts[tab.key]}
-            </span>
-          </button>
-        ))}
+              {tab.label}
+              <span
+                className={`rounded-full px-2 py-0.5 text-xs ${
+                  activeTab === tab.key ? 'bg-white/20 text-white' : 'bg-white text-slate-500'
+                }`}
+              >
+                {tabCounts[tab.key]}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        <div className="w-full lg:w-80">
+          <div className="relative flex items-center">
+            <Search className="pointer-events-none absolute left-3 h-4 w-4 text-slate-400" aria-hidden="true" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by title, subject, year, paper..."
+              className="w-full rounded-md border border-slate-200 bg-white py-2 pl-9 pr-9 text-sm font-medium text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue focus:outline-none focus:ring-2 focus:ring-brand-accent"
+            />
+            {searchQuery ? (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-accent"
+                aria-label="Clear search"
+              >
+                <X className="h-3.5 w-3.5" aria-hidden="true" />
+              </button>
+            ) : null}
+          </div>
+        </div>
       </div>
+
+      {searchQuery.trim() ? (
+        <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
+          <span>
+            Found {sortedNotes.length} matching {sortedNotes.length === 1 ? 'note' : 'notes'} for "{searchQuery.trim()}"
+          </span>
+          <button
+            type="button"
+            onClick={() => setSearchQuery('')}
+            className="text-brand-blue hover:underline focus:outline-none"
+          >
+            Clear filter
+          </button>
+        </div>
+      ) : null}
 
       {error ? (
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">{error}</div>
@@ -354,7 +438,22 @@ export default function AdminDashboard() {
           <div className="grid gap-4 md:hidden">
             {sortedNotes.length === 0 ? (
               <div className="rounded-lg border border-slate-200 bg-white px-4 py-12 text-center text-sm font-semibold text-slate-500 shadow-sm">
-                {isTrashTab ? 'Trash is empty.' : 'No notes yet.'}
+                {searchQuery.trim() ? (
+                  <div>
+                    <p>No notes found matching "{searchQuery}".</p>
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      className="mt-3 inline-flex items-center gap-1 rounded-md bg-brand-light px-3 py-1.5 text-xs font-bold text-brand-blue hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-brand-accent"
+                    >
+                      Clear search
+                    </button>
+                  </div>
+                ) : isTrashTab ? (
+                  'Trash is empty.'
+                ) : (
+                  'No notes yet.'
+                )}
               </div>
             ) : (
               sortedNotes.map((note) => {
@@ -380,6 +479,7 @@ export default function AdminDashboard() {
                         onDelete={handleDelete}
                         onRestore={handleRestore}
                         onPermanentDelete={handlePermanentDelete}
+                        onShare={handleShare}
                         stacked
                       />
                     </div>
@@ -423,7 +523,22 @@ export default function AdminDashboard() {
                 {sortedNotes.length === 0 ? (
                   <tr>
                     <td colSpan={isTrashTab ? 6 : 7} className="px-4 py-12 text-center text-sm font-semibold text-slate-500">
-                      {isTrashTab ? 'Trash is empty.' : 'No notes yet.'}
+                      {searchQuery.trim() ? (
+                        <div>
+                          <p>No notes found matching "{searchQuery}".</p>
+                          <button
+                            type="button"
+                            onClick={() => setSearchQuery('')}
+                            className="mt-3 inline-flex items-center gap-1 rounded-md bg-brand-light px-3 py-1.5 text-xs font-bold text-brand-blue hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-brand-accent"
+                          >
+                            Clear search
+                          </button>
+                        </div>
+                      ) : isTrashTab ? (
+                        'Trash is empty.'
+                      ) : (
+                        'No notes yet.'
+                      )}
                     </td>
                   </tr>
                 ) : (
@@ -453,6 +568,7 @@ export default function AdminDashboard() {
                             onDelete={handleDelete}
                             onRestore={handleRestore}
                             onPermanentDelete={handlePermanentDelete}
+                            onShare={handleShare}
                           />
                         </td>
                       </tr>

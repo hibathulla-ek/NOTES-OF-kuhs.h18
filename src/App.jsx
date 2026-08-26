@@ -25,6 +25,7 @@ import TermsPage from './pages/TermsPage'
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
 import AboutPage from './pages/AboutPage'
 import ContactPage from './pages/ContactPage'
+import NoteDetailPage from './pages/NoteDetailPage'
 
 function PlaceholderPage({ children }) {
   return (
@@ -79,6 +80,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/search" element={<SearchPage />} />
+        <Route path="/notes/:id" element={<NoteDetailPage />} />
         <Route path="/questions" element={<QuestionBankPage />} />
         <Route path="/mcq" element={<MCQPage />} />
         <Route path="/terms" element={<TermsPage />} />
