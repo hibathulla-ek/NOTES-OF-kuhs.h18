@@ -4,10 +4,19 @@ export default async function handler(request, response) {
   if (handleCors(request, response)) return
   if (!requireAdmin(request, response)) return
 
+  const { id } = request.query
+
   try {
     const supabase = getSupabaseAdmin()
 
     if (request.method === 'GET') {
+      if (id) {
+        const { data, error } = await supabase.from('questions').select('*').eq('id', id).single()
+        if (error) throw error
+        response.status(200).json({ question: data })
+        return
+      }
+
       const { data, error } = await supabase.from('questions').select('*').order('created_at', { ascending: false })
       if (error) throw error
       response.status(200).json({ questions: data ?? [] })
@@ -18,6 +27,30 @@ export default async function handler(request, response) {
       const { data, error } = await supabase.from('questions').insert(request.body).select('*').single()
       if (error) throw error
       response.status(201).json({ question: data })
+      return
+    }
+
+    if (request.method === 'PATCH') {
+      if (!id) {
+        response.status(400).json({ error: 'Missing question id.' })
+        return
+      }
+
+      const { data, error } = await supabase.from('questions').update(request.body).eq('id', id).select('*').single()
+      if (error) throw error
+      response.status(200).json({ question: data })
+      return
+    }
+
+    if (request.method === 'DELETE') {
+      if (!id) {
+        response.status(400).json({ error: 'Missing question id.' })
+        return
+      }
+
+      const { error } = await supabase.from('questions').delete().eq('id', id)
+      if (error) throw error
+      response.status(200).json({ ok: true })
       return
     }
 

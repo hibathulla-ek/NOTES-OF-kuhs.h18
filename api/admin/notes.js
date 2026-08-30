@@ -9,10 +9,19 @@ export default async function handler(request, response) {
     return
   }
 
+  const { id } = request.query
+
   try {
     const supabase = getSupabaseAdmin()
 
     if (request.method === 'GET') {
+      if (id) {
+        const { data, error } = await supabase.from('notes').select('*').eq('id', id).single()
+        if (error) throw error
+        response.status(200).json({ note: data })
+        return
+      }
+
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
       await supabase.from('notes').delete().not('deleted_at', 'is', null).lt('deleted_at', thirtyDaysAgo)
 
@@ -38,6 +47,39 @@ export default async function handler(request, response) {
       }
 
       response.status(201).json({ note: data })
+      return
+    }
+
+    if (request.method === 'PATCH') {
+      if (!id) {
+        response.status(400).json({ error: 'Missing note id.' })
+        return
+      }
+
+      const { data, error } = await supabase.from('notes').update(request.body).eq('id', id).select('*').single()
+      if (error) throw error
+
+      response.status(200).json({ note: data })
+      return
+    }
+
+    if (request.method === 'DELETE') {
+      if (!id) {
+        response.status(400).json({ error: 'Missing note id.' })
+        return
+      }
+
+      const isPermanent = request.query.permanent === 'true'
+
+      if (isPermanent) {
+        const { error } = await supabase.from('notes').delete().eq('id', id)
+        if (error) throw error
+      } else {
+        const { error } = await supabase.from('notes').update({ deleted_at: new Date().toISOString() }).eq('id', id)
+        if (error) throw error
+      }
+
+      response.status(200).json({ ok: true })
       return
     }
 

@@ -1,6 +1,22 @@
 {
   "rewrites": [
     {
+      "source": "/api/admin/note",
+      "destination": "/api/admin/notes"
+    },
+    {
+      "source": "/api/admin/question",
+      "destination": "/api/admin/questions"
+    },
+    {
+      "source": "/api/admin/mcq",
+      "destination": "/api/admin/mcqs"
+    },
+    {
+      "source": "/api/admin/request",
+      "destination": "/api/admin/requests"
+    },
+    {
       "source": "/((?!api/|assets/).*)",
       "destination": "/index.html"
     }
