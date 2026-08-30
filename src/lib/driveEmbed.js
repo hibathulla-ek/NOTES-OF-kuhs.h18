@@ -18,22 +18,44 @@ export function getGoogleDriveEmbedUrl(url) {
     return null
   }
 
+  const fileId = extractGoogleDriveFileId(url)
+  if (fileId) {
+    return `https://drive.google.com/file/d/${fileId}/preview`
+  }
+
+  const trimmedUrl = url.trim()
+  if (trimmedUrl.startsWith('http://') || trimmedUrl.startsWith('https://')) {
+    return trimmedUrl
+  }
+
+  return null
+}
+
+/**
+ * Extracts the file ID from a Google Drive URL.
+ *
+ * @param {string} url - The Google Drive file URL
+ * @returns {string|null} - The extracted file ID or null
+ */
+export function extractGoogleDriveFileId(url) {
+  if (!url || typeof url !== 'string') {
+    return null
+  }
+
   const trimmedUrl = url.trim()
 
-  // Match /file/d/{id}, /document/d/{id}, /spreadsheets/d/{id}, /presentation/d/{id}
   const pathMatch = trimmedUrl.match(/\/(?:file|document|spreadsheets|presentation)\/d\/([a-zA-Z0-9_-]+)/i)
   if (pathMatch && pathMatch[1]) {
-    return `https://drive.google.com/file/d/${pathMatch[1]}/preview`
+    return pathMatch[1]
   }
 
-  // Match ?id={id} or &id={id} (e.g. drive.google.com/open?id=...)
   const queryMatch = trimmedUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/i)
   if (queryMatch && queryMatch[1]) {
-    return `https://drive.google.com/file/d/${queryMatch[1]}/preview`
+    return queryMatch[1]
   }
 
-  // Fallback: If it's already an http(s) link, check if it's a direct URL
-  if (trimmedUrl.startsWith('http://') || trimmedUrl.startsWith('https://')) {
+  // If string is already just an alphanumeric ID
+  if (/^[a-zA-Z0-9_-]{20,}$/.test(trimmedUrl)) {
     return trimmedUrl
   }
 
