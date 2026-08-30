@@ -42,7 +42,7 @@ function SortHeader({ label, sortKey, sort, onSort }) {
 function StatusBadge({ isActive }) {
   return (
     <span
-      className={`inline-flex rounded-full px-2 py-1 text-xs font-bold ${
+      className={`inline-flex rounded-full px-2 py-1 text-xs font-bold transition-colors duration-200 ${
         isActive ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-700'
       }`}
     >
@@ -123,9 +123,13 @@ function NoteActions({ note, isBusy, isTrash, onPreview, onToggle, onDelete, onR
         type="button"
         onClick={() => onToggle(note)}
         disabled={isBusy}
-        className="rounded-md bg-brand-light px-3 py-2 text-xs font-bold text-brand-blue hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-brand-accent disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+        className={`rounded-md px-3 py-2 text-xs font-bold transition focus:outline-none focus:ring-2 focus:ring-brand-accent disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 ${
+          note.is_active
+            ? 'bg-amber-50 text-amber-800 hover:bg-amber-100'
+            : 'bg-brand-light text-brand-blue hover:bg-blue-100'
+        }`}
       >
-        {note.is_active ? 'Hide' : 'Show'}
+        {note.is_active ? 'Hide' : 'Unhide'}
       </button>
       <button
         type="button"
@@ -151,13 +155,16 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [previewNote, setPreviewNote] = useState(null)
+  const [exitingNoteIds, setExitingNoteIds] = useState(new Set())
 
   useEffect(() => {
     document.title = 'Admin — KUHS MLT Notes'
   }, [])
 
-  async function loadNotes() {
-    setIsLoading(true)
+  async function loadNotes(showSpinner = true) {
+    if (showSpinner) {
+      setIsLoading(true)
+    }
     setError('')
 
     try {
@@ -168,16 +175,20 @@ export default function AdminDashboard() {
       setNotes(notesData.notes ?? [])
       setTrashedNotes(trashData.notes ?? [])
     } catch (dashboardError) {
-      setNotes([])
-      setTrashedNotes([])
+      if (showSpinner) {
+        setNotes([])
+        setTrashedNotes([])
+      }
       setError(dashboardError.message || 'Unable to load notes.')
     } finally {
-      setIsLoading(false)
+      if (showSpinner) {
+        setIsLoading(false)
+      }
     }
   }
 
   useEffect(() => {
-    loadNotes()
+    loadNotes(true)
   }, [])
 
   const isTrashTab = activeTab === 'trash'
@@ -187,9 +198,9 @@ export default function AdminDashboard() {
     if (activeTab === 'trash') {
       list = trashedNotes
     } else if (activeTab === 'active') {
-      list = notes.filter((note) => note.is_active)
+      list = notes.filter((note) => note.is_active || exitingNoteIds.has(note.id))
     } else if (activeTab === 'hidden') {
-      list = notes.filter((note) => !note.is_active)
+      list = notes.filter((note) => !note.is_active || exitingNoteIds.has(note.id))
     }
 
     const query = searchQuery.trim().toLowerCase()
@@ -210,7 +221,7 @@ export default function AdminDashboard() {
         paper.includes(query)
       )
     })
-  }, [activeTab, notes, trashedNotes, searchQuery])
+  }, [activeTab, notes, trashedNotes, searchQuery, exitingNoteIds])
 
   const sortedNotes = useMemo(() => {
     return [...visibleNotes].sort((first, second) => {
@@ -270,18 +281,37 @@ export default function AdminDashboard() {
 
   async function handleToggle(note) {
     setBusyNoteId(note.id)
+    const nextIsActive = !note.is_active
+    const shouldAnimateOut = (activeTab === 'active' && !nextIsActive) || (activeTab === 'hidden' && nextIsActive)
+
+    if (shouldAnimateOut) {
+      // Trigger smooth fade-out and collapse
+      setExitingNoteIds((prev) => new Set(prev).add(note.id))
+      await new Promise((resolve) => setTimeout(resolve, 300))
+      setNotes((prev) => prev.map((n) => (n.id === note.id ? { ...n, is_active: nextIsActive } : n)))
+      setExitingNoteIds((prev) => {
+        const next = new Set(prev)
+        next.delete(note.id)
+        return next
+      })
+    } else {
+      // In-place update on 'all' tab
+      setNotes((prev) => prev.map((n) => (n.id === note.id ? { ...n, is_active: nextIsActive } : n)))
+    }
 
     try {
-      const nextIsActive = !note.is_active
       await adminRequest(`/api/admin/note?id=${encodeURIComponent(note.id)}`, {
         method: 'PATCH',
         password: adminPassword,
         body: { is_active: nextIsActive },
       })
 
-      toast.success(nextIsActive ? 'Note shown' : 'Note hidden')
-      await loadNotes()
+      toast.success(nextIsActive ? 'Note unhidden' : 'Note hidden')
+      // Background sync without full-table unmounting spinner
+      loadNotes(false)
     } catch (toggleError) {
+      // Rollback optimistic state
+      setNotes((prev) => prev.map((n) => (n.id === note.id ? { ...n, is_active: note.is_active } : n)))
       toast.error(toggleError.message || 'Unable to update note.')
     } finally {
       setBusyNoteId('')
@@ -297,6 +327,20 @@ export default function AdminDashboard() {
 
     setBusyNoteId(note.id)
 
+    // Smooth removal animation
+    setExitingNoteIds((prev) => new Set(prev).add(note.id))
+    await new Promise((resolve) => setTimeout(resolve, 300))
+
+    const deletedAt = new Date().toISOString()
+    const deletedNote = { ...note, deleted_at: deletedAt }
+    setNotes((prev) => prev.filter((n) => n.id !== note.id))
+    setTrashedNotes((prev) => [deletedNote, ...prev])
+    setExitingNoteIds((prev) => {
+      const next = new Set(prev)
+      next.delete(note.id)
+      return next
+    })
+
     try {
       await adminRequest(`/api/admin/note?id=${encodeURIComponent(note.id)}`, {
         method: 'DELETE',
@@ -304,8 +348,11 @@ export default function AdminDashboard() {
       })
 
       toast.success('Note moved to Trash')
-      await loadNotes()
+      loadNotes(false)
     } catch (deleteError) {
+      // Rollback
+      setNotes((prev) => [note, ...prev])
+      setTrashedNotes((prev) => prev.filter((n) => n.id !== note.id))
       toast.error(deleteError.message || 'Unable to delete note.')
     } finally {
       setBusyNoteId('')
@@ -315,6 +362,18 @@ export default function AdminDashboard() {
   async function handleRestore(note) {
     setBusyNoteId(note.id)
 
+    setExitingNoteIds((prev) => new Set(prev).add(note.id))
+    await new Promise((resolve) => setTimeout(resolve, 300))
+
+    const restoredNote = { ...note, deleted_at: null }
+    setTrashedNotes((prev) => prev.filter((n) => n.id !== note.id))
+    setNotes((prev) => [restoredNote, ...prev])
+    setExitingNoteIds((prev) => {
+      const next = new Set(prev)
+      next.delete(note.id)
+      return next
+    })
+
     try {
       await adminRequest(`/api/admin/note?id=${encodeURIComponent(note.id)}`, {
         method: 'PATCH',
@@ -323,8 +382,10 @@ export default function AdminDashboard() {
       })
 
       toast.success('Note restored')
-      await loadNotes()
+      loadNotes(false)
     } catch (restoreError) {
+      setTrashedNotes((prev) => [note, ...prev])
+      setNotes((prev) => prev.filter((n) => n.id !== note.id))
       toast.error(restoreError.message || 'Unable to restore note.')
     } finally {
       setBusyNoteId('')
@@ -340,6 +401,16 @@ export default function AdminDashboard() {
 
     setBusyNoteId(note.id)
 
+    setExitingNoteIds((prev) => new Set(prev).add(note.id))
+    await new Promise((resolve) => setTimeout(resolve, 300))
+
+    setTrashedNotes((prev) => prev.filter((n) => n.id !== note.id))
+    setExitingNoteIds((prev) => {
+      const next = new Set(prev)
+      next.delete(note.id)
+      return next
+    })
+
     try {
       await adminRequest(`/api/admin/note?id=${encodeURIComponent(note.id)}&permanent=true`, {
         method: 'DELETE',
@@ -347,8 +418,9 @@ export default function AdminDashboard() {
       })
 
       toast.success('Note permanently deleted')
-      await loadNotes()
+      loadNotes(false)
     } catch (deleteError) {
+      setTrashedNotes((prev) => [note, ...prev])
       toast.error(deleteError.message || 'Unable to delete note.')
     } finally {
       setBusyNoteId('')
@@ -478,9 +550,15 @@ export default function AdminDashboard() {
             ) : (
               sortedNotes.map((note) => {
                 const isBusy = busyNoteId === note.id
+                const isExiting = exitingNoteIds.has(note.id)
 
                 return (
-                  <article key={note.id} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                  <article
+                    key={note.id}
+                    className={`rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-all duration-300 ease-in-out ${
+                      isExiting ? 'scale-95 opacity-0 -translate-y-2 pointer-events-none' : 'scale-100 opacity-100 translate-y-0'
+                    }`}
+                  >
                     <div className="space-y-3">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <SubjectBadge subject={note.subject} />
@@ -574,9 +652,15 @@ export default function AdminDashboard() {
                 ) : (
                   sortedNotes.map((note) => {
                     const isBusy = busyNoteId === note.id
+                    const isExiting = exitingNoteIds.has(note.id)
 
                     return (
-                      <tr key={note.id}>
+                      <tr
+                        key={note.id}
+                        className={`transition-all duration-300 ease-in-out ${
+                          isExiting ? 'scale-95 opacity-0 pointer-events-none' : 'scale-100 opacity-100'
+                        }`}
+                      >
                         <td className="min-w-64 px-4 py-4 text-sm font-semibold text-slate-950">
                           <button
                             type="button"
