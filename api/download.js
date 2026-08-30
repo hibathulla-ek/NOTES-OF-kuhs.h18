@@ -8,6 +8,30 @@ export default async function handler(request, response) {
 
   try {
     const supabase = getSupabaseAdmin()
+
+    // Check maintenance mode lockdown
+    const expectedPassword = process.env.ADMIN_PASSWORD
+    const providedPassword = request.headers['x-admin-password']
+    const isAdmin = expectedPassword && providedPassword === expectedPassword
+
+    if (!isAdmin) {
+      const { data: siteSettings } = await supabase
+        .from('site_settings')
+        .select('is_maintenance_mode, maintenance_title, maintenance_message')
+        .limit(1)
+        .maybeSingle()
+
+      if (siteSettings?.is_maintenance_mode) {
+        response.status(503).json({
+          error: 'Platform is currently undergoing maintenance. Downloads are temporarily paused.',
+          maintenance: true,
+          title: siteSettings.maintenance_title,
+          message: siteSettings.maintenance_message,
+        })
+        return
+      }
+    }
+
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
 
     // Status check request

@@ -1,7 +1,8 @@
-import { BookOpen, Home, LayoutDashboard, LogOut, Menu, Plus, X, MessageSquare, Database, HelpCircle, Settings, Eye, Activity } from 'lucide-react'
+import { BookOpen, Home, LayoutDashboard, LogOut, Menu, Plus, X, MessageSquare, Database, HelpCircle, Settings, Eye, Activity, ShieldAlert } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { NavLink, Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAdminAuth } from '../context/AdminAuth'
+import { useSiteSettings } from '../context/SiteSettingsContext'
 import { adminRequest } from '../lib/adminApi'
 import { supabase } from '../lib/supabase'
 
@@ -21,8 +22,14 @@ const mcqLinks = [
   { to: '/admin/mcq/settings', label: 'MCQ Settings', icon: Settings },
 ]
 
+const systemLinks = [
+  { to: '/admin/maintenance', label: 'Maintenance Mode', icon: ShieldAlert },
+]
+
+
 function AdminNav({ onNavigate }) {
   const { logout, adminPassword } = useAdminAuth()
+  const { isMaintenanceMode } = useSiteSettings()
   const location = useLocation()
   const [stats, setStats] = useState({ views: 0, pendingRequests: 0 })
 
@@ -90,6 +97,12 @@ function AdminNav({ onNavigate }) {
           <Icon className="h-5 w-5" aria-hidden="true" />
           {label}
         </div>
+        {to === '/admin/maintenance' && isMaintenanceMode && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-rose-700">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-600" />
+            Lockdown
+          </span>
+        )}
         {badge && stats[badge] > 0 && (
           <span className="inline-flex h-5 items-center justify-center rounded-full bg-brand-blue px-2 text-xs font-bold text-white">
             {stats[badge]}
@@ -102,9 +115,16 @@ function AdminNav({ onNavigate }) {
   return (
     <div className="flex h-full flex-col bg-white overflow-y-auto">
       <div className="border-b border-slate-200 px-5 py-4 shrink-0">
-        <div className="flex items-center gap-2 text-brand-blue">
-          <BookOpen className="h-6 w-6" aria-hidden="true" />
-          <span className="text-lg font-bold">Admin Panel</span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-brand-blue">
+            <BookOpen className="h-6 w-6" aria-hidden="true" />
+            <span className="text-lg font-bold">Admin Panel</span>
+          </div>
+          {isMaintenanceMode && (
+            <span className="inline-flex items-center rounded bg-rose-600 px-1.5 py-0.5 text-[10px] font-extrabold uppercase text-white shadow-sm">
+              Lockdown
+            </span>
+          )}
         </div>
       </div>
 
@@ -120,6 +140,10 @@ function AdminNav({ onNavigate }) {
         <div>
           <h3 className="mb-2 px-3 text-xs font-bold uppercase tracking-wider text-slate-500">MCQ</h3>
           <div className="space-y-1">{renderLinks(mcqLinks)}</div>
+        </div>
+        <div>
+          <h3 className="mb-2 px-3 text-xs font-bold uppercase tracking-wider text-slate-500">System</h3>
+          <div className="space-y-1">{renderLinks(systemLinks)}</div>
         </div>
 
         <div className="border-t border-slate-200 pt-4">

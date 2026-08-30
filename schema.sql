@@ -188,3 +188,28 @@ create policy "Public can view active notes"
 on public.notes
 for select
 using (is_active = true and deleted_at is null);
+
+-- Site Settings (Maintenance Mode)
+create table if not exists public.site_settings (
+  id uuid primary key default gen_random_uuid(),
+  is_maintenance_mode boolean default false,
+  maintenance_title text default 'System Maintenance Underway',
+  maintenance_message text default 'We are currently upgrading the platform to serve you better. Public access is temporarily paused.',
+  start_time timestamptz,
+  end_time timestamptz,
+  updated_at timestamptz default now()
+);
+
+-- Seed site_settings if empty
+insert into public.site_settings (is_maintenance_mode, maintenance_title, maintenance_message)
+select false, 'System Maintenance Underway', 'We are currently upgrading the platform to serve you better. Public access is temporarily paused.'
+where not exists (select 1 from public.site_settings);
+
+alter table public.site_settings enable row level security;
+
+drop policy if exists "Public can view site settings" on public.site_settings;
+create policy "Public can view site settings"
+on public.site_settings
+for select
+using (true);
+

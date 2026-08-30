@@ -200,3 +200,9 @@ values
     'https://drive.google.com/placeholder',
     true
   );
+
+-- Seed initial site_settings
+insert into public.site_settings (is_maintenance_mode, maintenance_title, maintenance_message)
+select false, 'System Maintenance Underway', 'We are currently upgrading the platform to serve you better. Public access is temporarily paused.'
+where not exists (select 1 from public.site_settings);
+

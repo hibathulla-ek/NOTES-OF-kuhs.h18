@@ -5,6 +5,7 @@ import App from './App.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { AdminAuthProvider } from './context/AdminAuth.jsx'
 import { DownloadLimitProvider } from './context/DownloadLimit.jsx'
+import { SiteSettingsProvider } from './context/SiteSettingsContext.jsx'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
@@ -12,11 +13,14 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <BrowserRouter>
       <ErrorBoundary>
         <AdminAuthProvider>
-          <DownloadLimitProvider>
-            <App />
-          </DownloadLimitProvider>
+          <SiteSettingsProvider>
+            <DownloadLimitProvider>
+              <App />
+            </DownloadLimitProvider>
+          </SiteSettingsProvider>
         </AdminAuthProvider>
       </ErrorBoundary>
     </BrowserRouter>
   </React.StrictMode>,
 )
+

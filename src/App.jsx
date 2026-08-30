@@ -1,7 +1,9 @@
-import { Link, Route, Routes, useLocation } from 'react-router-dom'
+import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { useEffect } from 'react'
 import { supabase } from './lib/supabase'
+import { useSiteSettings } from './context/SiteSettingsContext'
+import { useAdminAuth } from './context/AdminAuth'
 import AdminLayout from './components/AdminLayout'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
@@ -21,21 +23,13 @@ import AdminMCQ from './pages/AdminMCQ'
 import AddMCQ from './pages/AddMCQ'
 import EditMCQ from './pages/EditMCQ'
 import MCQSettings from './pages/MCQSettings'
+import AdminMaintenance from './pages/AdminMaintenance'
+import MaintenancePage from './pages/MaintenancePage'
 import TermsPage from './pages/TermsPage'
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
 import AboutPage from './pages/AboutPage'
 import ContactPage from './pages/ContactPage'
 import NoteDetailPage from './pages/NoteDetailPage'
-
-function PlaceholderPage({ children }) {
-  return (
-    <main className="min-h-[calc(100vh-4rem)] bg-slate-50 px-4 py-12 text-slate-950 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-4xl rounded-lg border border-slate-200 bg-white p-6 text-lg font-semibold text-brand-blue shadow-sm">
-        {children}
-      </div>
-    </main>
-  )
-}
 
 function NotFoundPage() {
   return (
@@ -55,11 +49,14 @@ function NotFoundPage() {
 
 export default function App() {
   const location = useLocation()
+  const { isMaintenanceMode } = useSiteSettings()
+  const { isAuthenticated } = useAdminAuth()
+
   const isAdminRoute = location.pathname.startsWith('/admin')
 
   useEffect(() => {
     async function trackView() {
-      if (!supabase || isAdminRoute) {
+      if (!supabase || isAdminRoute || isMaintenanceMode) {
         return
       }
 
@@ -72,7 +69,17 @@ export default function App() {
       }
     }
     trackView()
-  }, [location.pathname, isAdminRoute])
+  }, [location.pathname, isAdminRoute, isMaintenanceMode])
+
+  // Public lockdown active: If maintenance mode is enabled and user is not on admin route and not authenticated admin
+  if (isMaintenanceMode && !isAdminRoute && !isAuthenticated) {
+    return (
+      <>
+        <MaintenancePage />
+        <Toaster position="top-right" />
+      </>
+    )
+  }
 
   return (
     <>
@@ -87,6 +94,10 @@ export default function App() {
         <Route path="/privacy" element={<PrivacyPolicyPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/contact" element={<ContactPage />} />
+        <Route
+          path="/maintenance"
+          element={isMaintenanceMode ? <MaintenancePage /> : <Navigate to="/" replace />}
+        />
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/admin" element={<AdminLayout />}>
           <Route path="dashboard" element={<AdminDashboard />} />
@@ -100,6 +111,7 @@ export default function App() {
           <Route path="mcq/new" element={<AddMCQ />} />
           <Route path="mcq/edit/:id" element={<EditMCQ />} />
           <Route path="mcq/settings" element={<MCQSettings />} />
+          <Route path="maintenance" element={<AdminMaintenance />} />
         </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
