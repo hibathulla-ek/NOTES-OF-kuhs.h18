@@ -13,7 +13,22 @@ export default async function handler(request, response) {
         .limit(1)
         .maybeSingle()
 
-      if (error) throw error
+      if (error) {
+        // If table doesn't exist yet in Supabase, return default settings gracefully
+        if (error.code === '42P01' || error.message?.includes('schema cache')) {
+          const defaultSettings = {
+            is_maintenance_mode: false,
+            maintenance_title: 'System Maintenance Underway',
+            maintenance_message: 'We are currently upgrading the platform to serve you better. Public access is temporarily paused.',
+            start_time: null,
+            end_time: null,
+          }
+          response.setHeader('Cache-Control', 'no-store, max-age=0')
+          response.status(200).json({ settings: defaultSettings })
+          return
+        }
+        throw error
+      }
 
       const settings = data || {
         is_maintenance_mode: false,

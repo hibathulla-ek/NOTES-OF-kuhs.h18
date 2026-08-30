@@ -9,7 +9,22 @@ export default async function handler(request, response) {
 
     if (request.method === 'GET') {
       const { data, error } = await supabase.from('site_settings').select('*').limit(1).maybeSingle()
-      if (error) throw error
+      if (error) {
+        if (error.code === '42P01' || error.message?.includes('schema cache')) {
+          response.status(200).json({
+            settings: {
+              is_maintenance_mode: false,
+              maintenance_title: 'System Maintenance Underway',
+              maintenance_message: 'We are currently upgrading the platform to serve you better. Public access is temporarily paused.',
+              start_time: null,
+              end_time: null,
+              _needsMigration: true,
+            },
+          })
+          return
+        }
+        throw error
+      }
 
       if (!data) {
         // Fallback default response if no row yet
@@ -60,7 +75,15 @@ export default async function handler(request, response) {
         }
       }
 
-      if (error) throw error
+      if (error) {
+        if (error.code === '42P01' || error.message?.includes('schema cache')) {
+          response.status(400).json({
+            error: "The 'site_settings' table has not been created in Supabase yet. Please run the SQL schema migration in Supabase SQL editor.",
+          })
+          return
+        }
+        throw error
+      }
       response.status(200).json({ settings: data })
       return
     }
