@@ -145,7 +145,16 @@ export default function NativePdfViewer({
       : Math.min(containerWidth - 32, 740)
 
   const pdfUrl = resolvedFileId ? `/api/pdf-proxy?fileId=${encodeURIComponent(resolvedFileId)}` : null
-  const embedUrl = getGoogleDriveEmbedUrl(driveUrl || (resolvedFileId ? `https://drive.google.com/file/d/${resolvedFileId}/view` : ''))
+  const embedUrl = getGoogleDriveEmbedUrl(
+    driveUrl || (resolvedFileId ? `https://drive.google.com/file/d/${resolvedFileId}/view` : '')
+  )
+
+  const handleLoadError = () => {
+    setPdfError(true)
+    if (fallbackIframe && embedUrl) {
+      setUseIframeFallback(true)
+    }
+  }
 
   if (!resolvedFileId && !driveUrl) {
     return (
@@ -156,24 +165,66 @@ export default function NativePdfViewer({
     )
   }
 
-  // If switched to Google Drive iframe fallback
+  // Automatic or manual fallback to embedded Google Drive preview
   if (useIframeFallback && embedUrl) {
     return (
-      <div className="relative w-full rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-        <div className="flex items-center justify-between bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-600 border-b border-slate-200">
-          <span>Google Drive Viewer Mode</span>
-          <button
-            type="button"
-            onClick={() => setUseIframeFallback(false)}
-            className="text-brand-blue hover:underline focus:outline-none"
-          >
-            Switch back to Native Viewer
-          </button>
-        </div>
+      <div
+        ref={viewerContainerRef}
+        className={`relative flex flex-col w-full rounded-xl border border-slate-200 bg-white shadow-lg overflow-hidden ${
+          isFullScreen ? 'fixed inset-0 z-50 h-screen rounded-none' : ''
+        }`}
+      >
+        {showToolbar ? (
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 sm:px-4">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded bg-white px-2 py-0.5 text-slate-700 shadow-sm border border-slate-200">
+                <FileText className="h-3.5 w-3.5 text-brand-blue" aria-hidden="true" />
+                Google Drive Viewer
+              </span>
+              {!pdfError ? (
+                <button
+                  type="button"
+                  onClick={() => setUseIframeFallback(false)}
+                  className="text-brand-blue hover:underline focus:outline-none"
+                >
+                  Switch to Native Viewer
+                </button>
+              ) : null}
+            </div>
+
+            <div className="flex items-center gap-1 sm:gap-2">
+              <button
+                type="button"
+                onClick={toggleFullScreen}
+                className="rounded p-1 text-slate-600 hover:bg-slate-200 hover:text-slate-900 focus:outline-none focus:ring-1 focus:ring-brand-accent"
+                title={isFullScreen ? 'Exit Full Screen' : 'Full Screen Mode'}
+                aria-label="Toggle Fullscreen"
+              >
+                {isFullScreen ? (
+                  <Minimize2 className="h-4 w-4" aria-hidden="true" />
+                ) : (
+                  <Maximize2 className="h-4 w-4" aria-hidden="true" />
+                )}
+              </button>
+              {driveUrl ? (
+                <a
+                  href={driveUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 rounded bg-brand-blue px-2.5 py-1 text-xs font-semibold text-white hover:bg-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
+                >
+                  <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                  Open in Drive
+                </a>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
+
         <iframe
           src={embedUrl}
           title={`Preview - ${title}`}
-          className={`w-full ${isFullScreen ? 'h-screen' : 'h-[75vh]'} border-0`}
+          className={`w-full ${isFullScreen ? 'h-[calc(100vh-2.75rem)]' : 'h-[75vh]'} border-0`}
           allow="autoplay"
         />
       </div>
@@ -282,7 +333,7 @@ export default function NativePdfViewer({
           isFullScreen ? 'h-[calc(100vh-3.5rem)]' : maxHeight
         } p-2 sm:p-4 md:p-6 bg-slate-950/90 touch-pan-y`}
       >
-        {pdfError ? (
+        {pdfError && !useIframeFallback ? (
           <div className="flex flex-col items-center justify-center p-8 text-center bg-slate-900 rounded-xl border border-slate-800 max-w-lg my-8 text-white">
             <div className="rounded-full bg-amber-500/10 p-3 text-amber-400">
               <AlertCircle className="h-8 w-8" aria-hidden="true" />
@@ -321,7 +372,7 @@ export default function NativePdfViewer({
               setNumPages(total)
               setPdfError(false)
             }}
-            onLoadError={() => setPdfError(true)}
+            onLoadError={handleLoadError}
             loading={
               <div className="flex flex-col items-center justify-center py-20 text-slate-400">
                 <Loader2 className="h-10 w-10 animate-spin text-brand-accent" aria-hidden="true" />
