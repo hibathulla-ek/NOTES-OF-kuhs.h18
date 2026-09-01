@@ -87,7 +87,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/search" element={<SearchPage />} />
-        <Route path="/notes/:id" element={<NoteDetailPage />} />
+        <Route path="/notes/:slug" element={<NoteDetailPage />} />
         <Route path="/questions" element={<QuestionBankPage />} />
         <Route path="/mcq" element={<MCQPage />} />
         <Route path="/terms" element={<TermsPage />} />

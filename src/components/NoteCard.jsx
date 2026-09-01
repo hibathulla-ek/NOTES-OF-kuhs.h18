@@ -1,12 +1,15 @@
 import { Link } from 'react-router-dom'
 import { BookOpen } from 'lucide-react'
 import { SUBJECT_COLORS } from '../lib/constants'
+import { getNotePath } from '../lib/noteSlug'
 
 export default function NoteCard({ note }) {
   const colors = SUBJECT_COLORS[note.subject] ?? {
     bg: 'bg-slate-100',
     text: 'text-slate-800',
   }
+
+  const noteUrl = getNotePath(note)
 
   return (
     <article className="flex min-h-64 flex-col rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md hover:-translate-y-0.5">
@@ -21,7 +24,7 @@ export default function NoteCard({ note }) {
         </div>
 
         <h2 className="line-clamp-2 text-lg font-bold leading-6 text-slate-950">
-          <Link to={`/notes/${note.id}`} className="hover:text-brand-blue hover:underline">
+          <Link to={noteUrl} className="hover:text-brand-blue hover:underline">
             {note.title}
           </Link>
         </h2>
@@ -50,7 +53,7 @@ export default function NoteCard({ note }) {
       </div>
 
       <Link
-        to={`/notes/${note.id}`}
+        to={noteUrl}
         className="mt-5 inline-flex items-center justify-center gap-2 rounded-md bg-brand-blue px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2"
       >
         <BookOpen className="h-4 w-4" aria-hidden="true" />

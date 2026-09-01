@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft, BookOpen, Download, FileText, Loader2, Share2, Tag } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { supabase, supabaseConfigError } from '../lib/supabase'
@@ -7,9 +7,14 @@ import { SUBJECT_COLORS } from '../lib/constants'
 import { useDownloadLimit } from '../context/DownloadLimit'
 import NativePdfViewer from '../components/NativePdfViewer'
 import { extractGoogleDriveFileId } from '../lib/driveEmbed'
+import { getNotePath, getNoteShareUrl, parseNoteParam } from '../lib/noteSlug'
 
 export default function NoteDetailPage() {
-  const { id } = useParams()
+  const { slug, id } = useParams()
+  const noteParam = slug || id
+  const navigate = useNavigate()
+  const location = useLocation()
+
   const [note, setNote] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
@@ -27,23 +32,49 @@ export default function NoteDetailPage() {
           throw new Error(supabaseConfigError)
         }
 
-        const { data, error: fetchError } = await supabase
-          .from('notes')
-          .select('*')
-          .eq('id', id)
-          .single()
+        const { isFullUuid, shortId, fullUuid } = parseNoteParam(noteParam)
 
-        if (fetchError) {
-          throw fetchError
+        if (!isFullUuid && !shortId) {
+          throw new Error('Invalid note link format.')
         }
 
-        if (!data || !data.is_active || data.deleted_at) {
+        let noteData = null
+
+        if (isFullUuid) {
+          const { data, error: fetchError } = await supabase
+            .from('notes')
+            .select('*')
+            .eq('id', fullUuid)
+            .single()
+
+          if (fetchError) throw fetchError
+          noteData = data
+        } else {
+          const shortHex = shortId.toLowerCase()
+          const { data, error: fetchError } = await supabase
+            .from('notes')
+            .select('*')
+            .gte('id', `${shortHex}-0000-0000-0000-000000000000`)
+            .lte('id', `${shortHex}-ffff-ffff-ffff-ffffffffffff`)
+            .limit(1)
+
+          if (fetchError) throw fetchError
+          noteData = data && data.length > 0 ? data[0] : null
+        }
+
+        if (!noteData || !noteData.is_active || noteData.deleted_at) {
           throw new Error('This note is currently unavailable or has been removed.')
         }
 
         if (isCurrent) {
-          setNote(data)
-          document.title = `${data.title} — KUHS MLT Notes`
+          setNote(noteData)
+          document.title = `${noteData.title} — KUHS MLT Notes`
+
+          // Canonical redirect: If user landed on full UUID or non-canonical URL, redirect to canonical slug
+          const canonicalPath = getNotePath(noteData)
+          if (location.pathname !== canonicalPath) {
+            navigate(canonicalPath, { replace: true })
+          }
         }
       } catch (err) {
         if (isCurrent) {
@@ -62,10 +93,10 @@ export default function NoteDetailPage() {
     return () => {
       isCurrent = false
     }
-  }, [id])
+  }, [noteParam, location.pathname, navigate])
 
   async function handleShare() {
-    const url = window.location.href
+    const url = note ? getNoteShareUrl(note) : window.location.href
     try {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(url)

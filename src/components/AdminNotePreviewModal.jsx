@@ -5,6 +5,7 @@ import toast from 'react-hot-toast'
 import { SUBJECT_COLORS } from '../lib/constants'
 import NativePdfViewer from './NativePdfViewer'
 import { extractGoogleDriveFileId } from '../lib/driveEmbed'
+import { getNoteShareUrl } from '../lib/noteSlug'
 
 export default function AdminNotePreviewModal({ note, isOpen, onClose }) {
   useEffect(() => {
@@ -33,7 +34,7 @@ export default function AdminNotePreviewModal({ note, isOpen, onClose }) {
   const fileId = extractGoogleDriveFileId(note.drive_url)
 
   async function handleShare() {
-    const shareUrl = `${window.location.origin}/notes/${note.id}`
+    const shareUrl = getNoteShareUrl(note)
     try {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(shareUrl)
