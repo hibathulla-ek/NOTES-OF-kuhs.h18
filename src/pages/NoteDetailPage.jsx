@@ -7,11 +7,11 @@ import { SUBJECT_COLORS } from '../lib/constants'
 import { useDownloadLimit } from '../context/DownloadLimit'
 import NativePdfViewer from '../components/NativePdfViewer'
 import { extractGoogleDriveFileId } from '../lib/driveEmbed'
-import { getNotePath, getNoteShareUrl, parseNoteParam } from '../lib/noteSlug'
+import { generateNoteSlug } from '../lib/slug'
 
 export default function NoteDetailPage() {
   const { slug, id } = useParams()
-  const noteParam = slug || id
+  const rawParam = (slug || id || '').trim()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -24,6 +24,12 @@ export default function NoteDetailPage() {
     let isCurrent = true
 
     async function loadNote() {
+      if (!rawParam) {
+        setError('Note not found.')
+        setIsLoading(false)
+        return
+      }
+
       setIsLoading(true)
       setError('')
 
@@ -32,30 +38,33 @@ export default function NoteDetailPage() {
           throw new Error(supabaseConfigError)
         }
 
-        const { isFullUuid, shortId, fullUuid } = parseNoteParam(noteParam)
-
-        if (!isFullUuid && !shortId) {
-          throw new Error('Invalid note link format.')
-        }
-
+        const isFullUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawParam)
         let noteData = null
 
         if (isFullUuid) {
+          // Legacy direct UUID access: fetch by exact ID
           const { data, error: fetchError } = await supabase
             .from('notes')
             .select('*')
-            .eq('id', fullUuid)
+            .eq('id', rawParam.toLowerCase())
             .single()
 
           if (fetchError) throw fetchError
           noteData = data
         } else {
-          const shortHex = shortId.toLowerCase()
+          // Extract short ID from the end of the slug
+          const shortId = (rawParam.includes('-') ? rawParam.split('-').pop() : rawParam).toLowerCase()
+          
+          if (!shortId || shortId.length < 4) {
+            throw new Error('Invalid note link format.')
+          }
+
+          // Fetch note where UUID starts with shortId prefix
           const { data, error: fetchError } = await supabase
             .from('notes')
             .select('*')
-            .gte('id', `${shortHex}-0000-0000-0000-000000000000`)
-            .lte('id', `${shortHex}-ffff-ffff-ffff-ffffffffffff`)
+            .gte('id', `${shortId}-0000-0000-0000-000000000000`)
+            .lte('id', `${shortId}-ffff-ffff-ffff-ffffffffffff`)
             .limit(1)
 
           if (fetchError) throw fetchError
@@ -70,8 +79,8 @@ export default function NoteDetailPage() {
           setNote(noteData)
           document.title = `${noteData.title} — KUHS MLT Notes`
 
-          // Canonical redirect: If user landed on full UUID or non-canonical URL, redirect to canonical slug
-          const canonicalPath = getNotePath(noteData)
+          // Canonical 301-style redirect: If URL is legacy raw UUID or slug is non-canonical, redirect to canonical slug URL
+          const canonicalPath = `/notes/${generateNoteSlug(noteData.title, noteData.id)}`
           if (location.pathname !== canonicalPath) {
             navigate(canonicalPath, { replace: true })
           }
@@ -93,16 +102,17 @@ export default function NoteDetailPage() {
     return () => {
       isCurrent = false
     }
-  }, [noteParam, location.pathname, navigate])
+  }, [rawParam])
 
   async function handleShare() {
-    const url = note ? getNoteShareUrl(note) : window.location.href
+    if (!note) return
+    const shareUrl = `${window.location.origin}/notes/${generateNoteSlug(note.title, note.id)}`
     try {
       if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(url)
+        await navigator.clipboard.writeText(shareUrl)
       } else {
         const textArea = document.createElement('textarea')
-        textArea.value = url
+        textArea.value = shareUrl
         textArea.className = 'fixed opacity-0 pointer-events-none'
         document.body.appendChild(textArea)
         textArea.select()
