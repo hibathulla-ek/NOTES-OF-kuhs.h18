@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { BookOpen } from 'lucide-react'
 import { SUBJECT_COLORS } from '../lib/constants'
-import { generateNoteSlug } from '../lib/slug'
+import { getNotePath } from '../lib/slug'
 
 export default function NoteCard({ note }) {
   const colors = SUBJECT_COLORS[note.subject] ?? {
@@ -9,7 +9,7 @@ export default function NoteCard({ note }) {
     text: 'text-slate-800',
   }
 
-  const noteUrl = `/notes/${generateNoteSlug(note.title, note.id)}`
+  const noteUrl = getNotePath(note)
 
   return (
     <article className="flex min-h-64 flex-col rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md hover:-translate-y-0.5">

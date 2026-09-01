@@ -39,8 +39,42 @@ export default async function handler(request, response) {
       return
     }
 
+function cleanSlug(title) {
+  return (title || 'note')
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'note'
+}
+
+async function generateUniqueSlug(supabase, title, existingId = null) {
+  const base = cleanSlug(title)
+  let candidate = base
+  let counter = 1
+
+  while (true) {
+    let query = supabase.from('notes').select('id').eq('slug', candidate)
+    if (existingId) {
+      query = query.neq('id', existingId)
+    }
+    const { data, error } = await query
+    if (error || !data || data.length === 0) {
+      return candidate
+    }
+    candidate = `${base}-${counter++}`
+  }
+}
+
     if (request.method === 'POST') {
-      const { data, error } = await supabase.from('notes').insert(request.body).select('*').single()
+      const payload = { ...request.body }
+      if (payload.title && (!payload.slug || typeof payload.slug !== 'string' || !payload.slug.trim())) {
+        payload.slug = await generateUniqueSlug(supabase, payload.title)
+      } else if (payload.slug) {
+        payload.slug = cleanSlug(payload.slug)
+      }
+
+      const { data, error } = await supabase.from('notes').insert(payload).select('*').single()
 
       if (error) {
         throw error
@@ -56,7 +90,14 @@ export default async function handler(request, response) {
         return
       }
 
-      const { data, error } = await supabase.from('notes').update(request.body).eq('id', id).select('*').single()
+      const payload = { ...request.body }
+      if (payload.title && (!payload.slug || typeof payload.slug !== 'string' || !payload.slug.trim())) {
+        payload.slug = await generateUniqueSlug(supabase, payload.title, id)
+      } else if (payload.slug) {
+        payload.slug = cleanSlug(payload.slug)
+      }
+
+      const { data, error } = await supabase.from('notes').update(payload).eq('id', id).select('*').single()
       if (error) throw error
 
       response.status(200).json({ note: data })

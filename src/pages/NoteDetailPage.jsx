@@ -7,7 +7,7 @@ import { SUBJECT_COLORS } from '../lib/constants'
 import { useDownloadLimit } from '../context/DownloadLimit'
 import NativePdfViewer from '../components/NativePdfViewer'
 import { extractGoogleDriveFileId } from '../lib/driveEmbed'
-import { generateNoteSlug } from '../lib/slug'
+import { generateNoteSlug, getNotePath, getNoteShareUrl } from '../lib/slug'
 
 export default function NoteDetailPage() {
   const { slug, id } = useParams()
@@ -38,37 +38,46 @@ export default function NoteDetailPage() {
           throw new Error(supabaseConfigError)
         }
 
-        const isFullUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawParam)
+        const isLegacyUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawParam)
         let noteData = null
 
-        if (isFullUuid) {
-          // Legacy direct UUID access: fetch by exact ID
+        if (isLegacyUuid) {
+          // 1. Direct legacy UUID lookup: fetch by exact ID
           const { data, error: fetchError } = await supabase
             .from('notes')
             .select('*')
             .eq('id', rawParam.toLowerCase())
-            .single()
+            .maybeSingle()
 
           if (fetchError) throw fetchError
           noteData = data
         } else {
-          // Extract short ID from the end of the slug
-          const shortId = (rawParam.includes('-') ? rawParam.split('-').pop() : rawParam).toLowerCase()
-          
-          if (!shortId || shortId.length < 4) {
-            throw new Error('Invalid note link format.')
-          }
-
-          // Fetch note where UUID starts with shortId prefix
-          const { data, error: fetchError } = await supabase
+          // 2. Lookup by stored slug column
+          const { data: slugData, error: slugError } = await supabase
             .from('notes')
             .select('*')
-            .gte('id', `${shortId}-0000-0000-0000-000000000000`)
-            .lte('id', `${shortId}-ffff-ffff-ffff-ffffffffffff`)
-            .limit(1)
+            .eq('slug', rawParam)
+            .maybeSingle()
 
-          if (fetchError) throw fetchError
-          noteData = data && data.length > 0 ? data[0] : null
+          if (slugData) {
+            noteData = slugData
+          } else {
+            // 3. Fallback: Short ID prefix lookup (e.g. from title-slug-shortId or raw shortId)
+            const shortId = (rawParam.includes('-') ? rawParam.split('-').pop() : rawParam).toLowerCase()
+            const isShortHex = /^[0-9a-f]{8}$/i.test(shortId)
+
+            if (isShortHex) {
+              const { data: rangeData, error: rangeError } = await supabase
+                .from('notes')
+                .select('*')
+                .gte('id', `${shortId}-0000-0000-0000-000000000000`)
+                .lte('id', `${shortId}-ffff-ffff-ffff-ffffffffffff`)
+                .limit(1)
+
+              if (rangeError) throw rangeError
+              noteData = rangeData && rangeData.length > 0 ? rangeData[0] : null
+            }
+          }
         }
 
         if (!noteData || !noteData.is_active || noteData.deleted_at) {
@@ -79,8 +88,8 @@ export default function NoteDetailPage() {
           setNote(noteData)
           document.title = `${noteData.title} — KUHS MLT Notes`
 
-          // Canonical 301-style redirect: If URL is legacy raw UUID or slug is non-canonical, redirect to canonical slug URL
-          const canonicalPath = `/notes/${generateNoteSlug(noteData.title, noteData.id)}`
+          // 301-style redirect: Auto-redirect legacy UUID or non-canonical URL to canonical slug URL
+          const canonicalPath = getNotePath(noteData)
           if (location.pathname !== canonicalPath) {
             navigate(canonicalPath, { replace: true })
           }
@@ -106,7 +115,7 @@ export default function NoteDetailPage() {
 
   async function handleShare() {
     if (!note) return
-    const shareUrl = `${window.location.origin}/notes/${generateNoteSlug(note.title, note.id)}`
+    const shareUrl = getNoteShareUrl(note)
     try {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(shareUrl)

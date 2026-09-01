@@ -6,7 +6,7 @@ import { SUBJECT_COLORS } from '../lib/constants'
 import { adminRequest } from '../lib/adminApi'
 import { useAdminAuth } from '../context/AdminAuth'
 import AdminNotePreviewModal from '../components/AdminNotePreviewModal'
-import { generateNoteSlug } from '../lib/slug'
+import { getNoteShareUrl } from '../lib/slug'
 
 const TABS = [
   { key: 'all', label: 'All' },
@@ -262,7 +262,7 @@ export default function AdminDashboard() {
 
   async function handleShare(note) {
     if (!note) return
-    const shareUrl = `${window.location.origin}/notes/${generateNoteSlug(note.title, note.id)}`
+    const shareUrl = getNoteShareUrl(note)
     try {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(shareUrl)
