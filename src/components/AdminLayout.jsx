@@ -116,9 +116,12 @@ function AdminNav({ onNavigate }) {
     <div className="flex h-full flex-col bg-white overflow-y-auto">
       <div className="border-b border-slate-200 px-5 py-4 shrink-0">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-brand-blue">
-            <BookOpen className="h-6 w-6" aria-hidden="true" />
-            <span className="text-lg font-bold">Admin Panel</span>
+          <div className="flex items-center gap-2.5">
+            <img src="/logo-mark.png" alt="BrightPath Docs" className="h-7 w-7 shrink-0 object-contain" />
+            <span className="flex items-center font-sans text-base font-black tracking-tight">
+              <span className="text-brand-purple">BRIGHTPATH</span>
+              <span className="ml-1 text-brand-yellow">DOCS</span>
+            </span>
           </div>
           {isMaintenanceMode && (
             <span className="inline-flex items-center rounded bg-rose-600 px-1.5 py-0.5 text-[10px] font-extrabold uppercase text-white shadow-sm">

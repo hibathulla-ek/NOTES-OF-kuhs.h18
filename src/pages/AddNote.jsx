@@ -11,7 +11,7 @@ export default function AddNote() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
-    document.title = 'Admin — KUHS MLT Notes'
+    document.title = 'Admin — BRIGHTPATH DOCS'
   }, [])
 
   async function isDuplicateNote(noteData) {

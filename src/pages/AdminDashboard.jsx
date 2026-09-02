@@ -159,7 +159,7 @@ export default function AdminDashboard() {
   const [exitingNoteIds, setExitingNoteIds] = useState(new Set())
 
   useEffect(() => {
-    document.title = 'Admin — KUHS MLT Notes'
+    document.title = 'Admin — BRIGHTPATH DOCS'
   }, [])
 
   async function loadNotes(showSpinner = true) {

@@ -21,7 +21,7 @@ export default function MCQPage() {
   const [isFinished, setIsFinished] = useState(false)
 
   useEffect(() => {
-    document.title = 'MCQ Practice — KUHS MLT Notes'
+    document.title = 'MCQ Practice — BRIGHTPATH DOCS'
     async function checkPublic() {
       try {
         const { data, error } = await supabase.from('mcq_settings').select('is_public').single()

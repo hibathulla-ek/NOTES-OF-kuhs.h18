@@ -16,7 +16,7 @@ export default function EditNote() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    document.title = 'Admin — KUHS MLT Notes'
+    document.title = 'Admin — BRIGHTPATH DOCS'
   }, [])
 
   useEffect(() => {

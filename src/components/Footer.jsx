@@ -65,11 +65,17 @@ export default function Footer() {
 
   return (
     <footer className="border-t border-slate-200 bg-white px-4 py-10 text-slate-600 sm:px-6 lg:px-8">
-      <div className="mx-auto grid max-w-6xl gap-8 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mx-auto grid max-w-7xl gap-8 sm:grid-cols-2 lg:grid-cols-4">
         <div>
-          <span className="text-base font-bold text-brand-blue">KUHS MLT Notes</span>
+          <div className="flex items-center gap-2">
+            <img src="/logo-mark.png" alt="BrightPath Docs" className="h-6 w-6 shrink-0 object-contain" />
+            <span className="flex items-center font-sans text-base font-black tracking-tight">
+              <span className="text-brand-purple">BRIGHTPATH</span>
+              <span className="ml-1 text-brand-yellow">DOCS</span>
+            </span>
+          </div>
           <p className="mt-3 text-sm leading-6">
-            A free notes portal for KUHS BSc MLT students — searchable by subject, paper, and year.
+            A free notes portal for BSc MLT students — searchable by subject, paper, and year.
           </p>
         </div>
 
@@ -135,8 +141,8 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="mx-auto mt-8 max-w-6xl border-t border-slate-100 pt-6 text-center text-xs font-medium text-slate-500">
-        © {new Date().getFullYear()} KUHS BSc MLT Notes Portal · For educational use only
+      <div className="mx-auto mt-8 max-w-7xl border-t border-slate-100 pt-6 text-center text-xs font-medium text-slate-500">
+        © {new Date().getFullYear()} BRIGHTPATH DOCS · For educational use only
       </div>
     </footer>
   )

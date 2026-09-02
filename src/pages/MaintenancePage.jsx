@@ -87,16 +87,12 @@ export default function MaintenancePage() {
       {/* Top Brand Bar */}
       <header className="border-b border-slate-200 bg-white/80 backdrop-blur px-4 py-4 sm:px-8">
         <div className="mx-auto flex max-w-5xl items-center justify-between">
-          <div className="flex items-center gap-2.5 text-brand-blue">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-blue text-white shadow-sm">
-              <BookOpen className="h-5 w-5" />
-            </div>
-            <div>
-              <span className="text-lg font-black tracking-tight text-brand-blue">NOTES OF KUHS</span>
-              <span className="ml-1.5 hidden text-xs font-semibold text-slate-500 sm:inline-block">
-                BSc MLT Portal
-              </span>
-            </div>
+          <div className="flex items-center gap-2.5">
+            <img src="/logo-mark.png" alt="BrightPath Docs" className="h-8 w-8 shrink-0 object-contain" />
+            <span className="flex items-center font-sans text-base font-black tracking-tight sm:text-lg">
+              <span className="text-brand-purple">BRIGHTPATH</span>
+              <span className="ml-1 text-brand-yellow">DOCS</span>
+            </span>
           </div>
 
           <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-bold text-amber-800">
@@ -224,7 +220,7 @@ export default function MaintenancePage() {
       {/* Footer & Admin Bypass Link */}
       <footer className="border-t border-slate-200 bg-white px-4 py-4 text-center text-xs text-slate-500 sm:px-8">
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-2 sm:flex-row">
-          <span>&copy; {new Date().getFullYear()} KUHS BSc MLT Portal. All rights reserved.</span>
+          <span>&copy; {new Date().getFullYear()} BRIGHTPATH DOCS. All rights reserved.</span>
           <Link
             to="/admin"
             className="inline-flex items-center gap-1 font-semibold text-slate-600 hover:text-brand-blue hover:underline"

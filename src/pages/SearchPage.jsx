@@ -159,7 +159,7 @@ export default function SearchPage() {
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false)
 
   useEffect(() => {
-    document.title = query ? `Search: ${query} — KUHS MLT Notes` : 'Search — KUHS MLT Notes'
+    document.title = query ? `Search: ${query} — BRIGHTPATH DOCS` : 'Search — BRIGHTPATH DOCS'
   }, [query])
 
   useEffect(() => {

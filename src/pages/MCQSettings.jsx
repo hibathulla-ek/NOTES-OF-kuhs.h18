@@ -11,6 +11,7 @@ export default function MCQSettings() {
   const [isUpdating, setIsUpdating] = useState(false)
 
   useEffect(() => {
+    document.title = 'MCQ Settings — BRIGHTPATH DOCS Admin'
     async function fetchSettings() {
       try {
         const data = await adminRequest('/api/admin/mcq_settings', { password: adminPassword })

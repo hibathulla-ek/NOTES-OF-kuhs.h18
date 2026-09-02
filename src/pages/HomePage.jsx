@@ -43,7 +43,7 @@ export default function HomePage() {
   const [requestSuccess, setRequestSuccess] = useState(false)
 
   useEffect(() => {
-    document.title = 'KUHS BSc MLT Notes Portal — Find Your Notes Instantly'
+    document.title = 'BRIGHTPATH DOCS — Find Your Notes Instantly'
   }, [])
 
   useEffect(() => {
@@ -177,7 +177,7 @@ export default function HomePage() {
           <div className="mx-auto max-w-4xl">
             <div className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1 text-xs font-semibold text-brand-light backdrop-blur-sm mb-4">
               <Sparkles className="h-3.5 w-3.5 text-yellow-300" aria-hidden="true" />
-              KUHS BSc MLT Digital Study Portal
+              BRIGHTPATH DOCS — BSc MLT Digital Study Portal
             </div>
 
             <h1 className="text-4xl font-bold tracking-normal sm:text-5xl lg:text-6xl">
@@ -232,7 +232,7 @@ export default function HomePage() {
 
         {/* Dynamic Results or Default Homepage Sections */}
         {isSearching ? (
-          <section className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:px-8 transition-all duration-300">
+          <section className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8 transition-all duration-300">
             {/* Search header & counter */}
             <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-4">
               <div>
@@ -320,7 +320,7 @@ export default function HomePage() {
             </section>
 
             {/* Subject Cards Grid */}
-            <section className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+            <section className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
               <div className="mb-6 flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-brand-blue">Browse by Subject</h2>
                 <Link

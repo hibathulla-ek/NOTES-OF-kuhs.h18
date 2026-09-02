@@ -157,7 +157,7 @@ export default function QuestionBankPage() {
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false)
 
   useEffect(() => {
-    document.title = 'Question Bank — KUHS MLT Notes'
+    document.title = 'Question Bank — BRIGHTPATH DOCS'
   }, [])
 
   useEffect(() => {

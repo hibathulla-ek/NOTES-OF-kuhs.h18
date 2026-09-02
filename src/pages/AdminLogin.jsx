@@ -14,7 +14,7 @@ export default function AdminLogin() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
-    document.title = 'Admin — KUHS MLT Notes'
+    document.title = 'Admin — BRIGHTPATH DOCS'
   }, [])
 
   if (isAuthenticated) {

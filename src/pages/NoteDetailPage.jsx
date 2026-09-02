@@ -86,7 +86,7 @@ export default function NoteDetailPage() {
 
         if (isCurrent) {
           setNote(noteData)
-          document.title = `${noteData.title} — KUHS MLT Notes`
+          document.title = `${noteData.title} — BRIGHTPATH DOCS`
 
           // 301-style redirect: Auto-redirect legacy UUID or non-canonical URL to canonical slug URL
           const canonicalPath = getNotePath(noteData)
@@ -97,7 +97,7 @@ export default function NoteDetailPage() {
       } catch (err) {
         if (isCurrent) {
           setError(err.message || 'Note not found.')
-          document.title = 'Note Not Found — KUHS MLT Notes'
+          document.title = 'Note Not Found — BRIGHTPATH DOCS'
         }
       } finally {
         if (isCurrent) {

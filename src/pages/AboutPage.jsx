@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 
 export default function AboutPage() {
   useEffect(() => {
-    document.title = 'About Us — KUHS MLT Notes'
+    document.title = 'About Us — BRIGHTPATH DOCS'
   }, [])
 
   return (

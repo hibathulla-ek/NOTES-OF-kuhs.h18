@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 
 export default function TermsPage() {
   useEffect(() => {
-    document.title = 'Terms & Conditions — KUHS MLT Notes'
+    document.title = 'Terms & Conditions — BRIGHTPATH DOCS'
   }, [])
 
   return (

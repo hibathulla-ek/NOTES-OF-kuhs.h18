@@ -58,7 +58,7 @@ export default function AdminMaintenance() {
   const [endTime, setEndTime] = useState('')
 
   useEffect(() => {
-    document.title = 'Maintenance Mode Settings — Admin'
+    document.title = 'Maintenance Mode — BRIGHTPATH DOCS Admin'
 
     async function loadSettings() {
       try {

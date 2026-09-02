@@ -78,7 +78,7 @@ export default function AdminQuestions() {
   const [sort, setSort] = useState({ key: 'created_at', direction: 'desc' })
   const [busyId, setBusyId] = useState('')
 
-  useEffect(() => { document.title = 'Questions — Admin Panel' }, [])
+  useEffect(() => { document.title = 'Questions — BRIGHTPATH DOCS Admin' }, [])
 
   async function loadItems() {
     setIsLoading(true)

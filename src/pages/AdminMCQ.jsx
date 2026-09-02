@@ -71,7 +71,7 @@ export default function AdminMCQ() {
   const [sort, setSort] = useState({ key: 'created_at', direction: 'desc' })
   const [busyId, setBusyId] = useState('')
 
-  useEffect(() => { document.title = 'MCQs — Admin Panel' }, [])
+  useEffect(() => { document.title = 'MCQs — BRIGHTPATH DOCS Admin' }, [])
 
   async function loadItems() {
     setIsLoading(true)

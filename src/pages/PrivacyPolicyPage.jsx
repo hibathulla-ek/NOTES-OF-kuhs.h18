@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 
 export default function PrivacyPolicyPage() {
   useEffect(() => {
-    document.title = 'Privacy Policy — KUHS MLT Notes'
+    document.title = 'Privacy Policy — BRIGHTPATH DOCS'
   }, [])
 
   return (

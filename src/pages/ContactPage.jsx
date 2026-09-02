@@ -5,7 +5,7 @@ const CONTACT_EMAIL = 'brightpath18@gmail.com'
 
 export default function ContactPage() {
   useEffect(() => {
-    document.title = 'Contact Us — KUHS MLT Notes'
+    document.title = 'Contact Us — BRIGHTPATH DOCS'
   }, [])
 
   return (
