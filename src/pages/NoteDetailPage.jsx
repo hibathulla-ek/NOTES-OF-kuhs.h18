@@ -39,33 +39,31 @@ export default function NoteDetailPage() {
         }
 
         const isLegacyUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawParam)
+        const shortId = (isLegacyUuid ? rawParam : rawParam.split('-').pop()).toLowerCase()
+
         let noteData = null
 
         if (isLegacyUuid) {
           // 1. Direct legacy UUID lookup: fetch by exact ID
-          const { data, error: fetchError } = await supabase
+          const { data, error: idError } = await supabase
             .from('notes')
             .select('*')
             .eq('id', rawParam.toLowerCase())
             .maybeSingle()
 
-          if (fetchError) throw fetchError
+          if (idError) throw idError
           noteData = data
         } else {
-          // 2. Lookup by stored slug column
-          const { data: slugData, error: slugError } = await supabase
+          // 2. Query by matching the UUID prefix using shortId
+          const queryResult = await supabase
             .from('notes')
             .select('*')
-            .eq('slug', rawParam)
+            .ilike('id', `${shortId}%`)
             .maybeSingle()
 
-          if (slugData) {
-            noteData = slugData
-          } else {
-            // 3. Fallback: Short ID prefix lookup (e.g. from title-slug-shortId or raw shortId)
-            const shortId = (rawParam.includes('-') ? rawParam.split('-').pop() : rawParam).toLowerCase()
+          if (queryResult.error) {
+            // Fallback for PostgreSQL native UUID columns where ilike requires text casting
             const isShortHex = /^[0-9a-f]{8}$/i.test(shortId)
-
             if (isShortHex) {
               const { data: rangeData, error: rangeError } = await supabase
                 .from('notes')
@@ -76,7 +74,11 @@ export default function NoteDetailPage() {
 
               if (rangeError) throw rangeError
               noteData = rangeData && rangeData.length > 0 ? rangeData[0] : null
+            } else {
+              throw queryResult.error
             }
+          } else {
+            noteData = queryResult.data
           }
         }
 

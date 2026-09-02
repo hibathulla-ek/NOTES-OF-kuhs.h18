@@ -15,7 +15,7 @@ export function generateNoteSlug(title, id) {
 
 export function getNotePath(note) {
   if (!note) return '/notes';
-  const slug = note.slug || generateNoteSlug(note.title, note.id);
+  const slug = generateNoteSlug(note.title, note.id);
   return `/notes/${slug}`;
 }
 
