@@ -1,6 +1,7 @@
 import { Loader2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { PAPERS, SUBJECTS, YEARS } from '../lib/constants'
+import { isValidGoogleDocumentUrl } from '../lib/driveEmbed'
 
 const emptyForm = {
   title: '',
@@ -16,15 +17,6 @@ const emptyForm = {
 
 function normalizeDriveUrl(value) {
   return value.trim().replace(/\s+/g, '')
-}
-
-function isGoogleDriveUrl(value) {
-  try {
-    const parsedUrl = new URL(normalizeDriveUrl(value))
-    return parsedUrl.protocol === 'https:' && parsedUrl.hostname === 'drive.google.com'
-  } catch {
-    return false
-  }
 }
 
 export default function QuestionForm({ initialValues, onSubmit, submitLabel = 'Save Question', isSubmitting = false }) {
@@ -48,9 +40,9 @@ export default function QuestionForm({ initialValues, onSubmit, submitLabel = 'S
     }
 
     if (!formData.drive_url.trim()) {
-      nextErrors.drive_url = 'Google Drive URL is required.'
-    } else if (!isGoogleDriveUrl(formData.drive_url)) {
-      nextErrors.drive_url = 'Google Drive URL must start with https://drive.google.com'
+      nextErrors.drive_url = 'Document link is required.'
+    } else if (!isValidGoogleDocumentUrl(formData.drive_url)) {
+      nextErrors.drive_url = 'Please enter a valid Google Drive, Docs, or Slides URL.'
     }
 
     if (formData.type === 'PYQ' && !formData.exam_year?.trim()) {
@@ -211,7 +203,7 @@ export default function QuestionForm({ initialValues, onSubmit, submitLabel = 'S
 
       <div>
         <label htmlFor="drive_url" className="text-sm font-semibold text-slate-700">
-          Google Drive URL
+          Document URL (Google Slides, Docs, or Drive)
         </label>
         <input
           id="drive_url"
@@ -219,7 +211,7 @@ export default function QuestionForm({ initialValues, onSubmit, submitLabel = 'S
           value={formData.drive_url}
           onChange={(event) => updateField('drive_url', event.target.value)}
           required
-          placeholder="https://drive.google.com/..."
+          placeholder="https://docs.google.com/presentation/d/... or drive.google.com/..."
           className="mt-2 w-full rounded-md border border-slate-200 px-3 py-3 text-base text-slate-950 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-accent"
         />
         {errors.drive_url ? <p className="mt-1 text-sm font-semibold text-red-700">{errors.drive_url}</p> : null}

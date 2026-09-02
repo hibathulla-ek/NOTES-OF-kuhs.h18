@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom'
-import { ArrowLeft, BookOpen, Download, FileText, Loader2, Share2, Tag } from 'lucide-react'
+import { ArrowLeft, BookOpen, Download, ExternalLink, FileText, Loader2, Share2, Tag } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { supabase, supabaseConfigError } from '../lib/supabase'
 import { SUBJECT_COLORS } from '../lib/constants'
@@ -151,7 +151,7 @@ export default function NoteDetailPage() {
           </Link>
 
           {note ? (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
                 onClick={handleShare}
@@ -160,6 +160,18 @@ export default function NoteDetailPage() {
                 <Share2 className="h-4 w-4" aria-hidden="true" />
                 Share Note
               </button>
+
+              {note.drive_url ? (
+                <a
+                  href={note.drive_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-md bg-white border border-slate-200 px-3.5 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-brand-blue focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2"
+                >
+                  <ExternalLink className="h-4 w-4" aria-hidden="true" />
+                  Open in New Tab
+                </a>
+              ) : null}
 
               {note.drive_url ? (
                 <button

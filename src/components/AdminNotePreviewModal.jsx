@@ -130,13 +130,13 @@ export default function AdminNotePreviewModal({ note, isOpen, onClose }) {
                   className="inline-flex items-center justify-center gap-1.5 rounded-md bg-white border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 hover:text-brand-blue focus:outline-none focus:ring-2 focus:ring-brand-accent"
                 >
                   <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-                  Open in Drive
+                  Open in New Tab
                 </a>
               ) : null}
             </div>
 
             <div className="text-xs font-medium text-slate-500">
-              Admin Native PDF Preview
+              Admin Document Preview
             </div>
           </div>
         </div>

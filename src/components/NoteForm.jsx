@@ -1,6 +1,7 @@
 import { Loader2, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { PAPERS, SUBJECTS, YEARS } from '../lib/constants'
+import { isValidGoogleDocumentUrl } from '../lib/driveEmbed'
 
 const emptyForm = {
   title: '',
@@ -19,15 +20,6 @@ function normalizeKeyword(value) {
 
 function normalizeDriveUrl(value) {
   return value.trim().replace(/\s+/g, '')
-}
-
-function isGoogleDriveUrl(value) {
-  try {
-    const parsedUrl = new URL(normalizeDriveUrl(value))
-    return parsedUrl.protocol === 'https:' && parsedUrl.hostname === 'drive.google.com'
-  } catch {
-    return false
-  }
 }
 
 function buildFormData(initialValues) {
@@ -111,9 +103,9 @@ export default function NoteForm({ initialValues, onSubmit, submitLabel = 'Save 
     }
 
     if (!formData.drive_url.trim()) {
-      nextErrors.drive_url = 'Google Drive URL is required.'
-    } else if (!isGoogleDriveUrl(formData.drive_url)) {
-      nextErrors.drive_url = 'Google Drive URL must start with https://drive.google.com'
+      nextErrors.drive_url = 'Document link is required.'
+    } else if (!isValidGoogleDocumentUrl(formData.drive_url)) {
+      nextErrors.drive_url = 'Please enter a valid Google Drive, Docs, or Slides URL.'
     }
 
     setErrors(nextErrors)
@@ -253,7 +245,7 @@ export default function NoteForm({ initialValues, onSubmit, submitLabel = 'Save 
 
       <div>
         <label htmlFor="drive_url" className="text-sm font-semibold text-slate-700">
-          Google Drive URL
+          Document URL (Google Slides, Docs, or Drive)
         </label>
         <input
           id="drive_url"
@@ -261,7 +253,7 @@ export default function NoteForm({ initialValues, onSubmit, submitLabel = 'Save 
           value={formData.drive_url}
           onChange={(event) => updateField('drive_url', event.target.value)}
           required
-          placeholder="https://drive.google.com/..."
+          placeholder="https://docs.google.com/presentation/d/... or drive.google.com/..."
           className="mt-2 w-full rounded-md border border-slate-200 px-3 py-3 text-base text-slate-950 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-accent"
         />
         {errors.drive_url ? <p className="mt-1 text-sm font-semibold text-red-700">{errors.drive_url}</p> : null}
