@@ -1,6 +1,6 @@
-import { Search, SlidersHorizontal, X } from 'lucide-react'
+import { Home, Search, SlidersHorizontal, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import NoteCard from '../components/NoteCard'
 import { PAPERS, SUBJECTS, YEARS } from '../lib/constants'
 import { supabase, supabaseConfigError } from '../lib/supabase'
@@ -302,9 +302,18 @@ export default function SearchPage() {
   return (
     <main className="min-h-[calc(100vh-4rem)] bg-slate-50 px-4 py-8 text-slate-950 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-7">
-          <h1 className="text-3xl font-bold text-brand-blue">Search Notes</h1>
-          <p className="mt-2 text-sm text-slate-600">Find KUHS BSc MLT notes by keyword, year, paper, or subject.</p>
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">Search Notes</h1>
+            <p className="mt-1 text-sm text-slate-500 sm:mt-2">Find notes by keyword, year, paper, or subject.</p>
+          </div>
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand-purple focus:ring-offset-2"
+          >
+            <Home className="h-4 w-4 text-slate-500" aria-hidden="true" />
+            Back to Home
+          </Link>
         </div>
 
         <div className="grid gap-6 md:grid-cols-[17rem_minmax(0,1fr)]">
